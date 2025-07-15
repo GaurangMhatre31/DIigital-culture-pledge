@@ -865,26 +865,37 @@ def create_app():
         elements.append(practice_table)
         # Survey Responses
         add_section('SURVEY RESPONSES')
+        # Map of practice keys to user pledge fields and display names
+        practice_map = [
+            ('weekly_practice_1', 'Weekly Practice', user.weekly_practice_1),
+            ('monthly_practice_1', 'Monthly Practice 1', user.monthly_practice_1),
+            ('monthly_practice_2', 'Monthly Practice 2', user.monthly_practice_2),
+            ('quarterly_practice_1', 'Quarterly Practice 1', user.quarterly_practice_1),
+            ('quarterly_practice_2', 'Quarterly Practice 2', user.quarterly_practice_2),
+        ]
+        # Get latest survey for each practice
+        latest_survey = surveys[-1] if surveys else None
+        survey_data = {}
+        if latest_survey:
+            try:
+                survey_data = json.loads(latest_survey.response_data) if latest_survey.response_data else {}
+            except Exception:
+                survey_data = {}
         found = False
-        if surveys:
-            for survey in surveys:
-                try:
-                    data = json.loads(survey.response_data) if survey.response_data else {}
-                except Exception:
-                    data = {}
-                for key in ['weekly_practice_1', 'monthly_practice_1', 'monthly_practice_2', 'quarterly_practice_1', 'quarterly_practice_2']:
-                    practice = data.get(key)
-                    if practice and isinstance(practice, dict):
-                        found = True
-                        elements.append(Spacer(1, 10))
-                        elements.append(Paragraph(f'<b>Practice:</b> {key.replace("_", " ").title()}', normal))
-                        elements.append(Spacer(1, 2))
-                        elements.append(Paragraph(f'<b>Impact Level:</b> {practice.get("impact", "Not specified")}', normal))
-                        elements.append(Spacer(1, 2))
-                        elements.append(Paragraph(f'<b>Action Taken:</b> {practice.get("action_taken", "Not specified")}', normal))
-                        elements.append(Spacer(1, 2))
-                        elements.append(Paragraph(f'<b>Action Needed:</b> {practice.get("action_needed", "Not specified")}', normal))
-                        elements.append(Spacer(1, 16))
+        for key, label, pledge in practice_map:
+            elements.append(Spacer(1, 10))
+            elements.append(Paragraph(f'<b>{label}</b>', normal))
+            elements.append(Spacer(1, 4))
+            elements.append(Paragraph(f'<b>Pledge/Commitment:</b> {pledge or "Not specified"}', normal))
+            response = survey_data.get(key, {})
+            elements.append(Spacer(1, 2))
+            elements.append(Paragraph(f'<b>Action Taken:</b> {response.get("action_taken", "Not specified")}', normal))
+            elements.append(Spacer(1, 2))
+            elements.append(Paragraph(f'<b>Action Needed:</b> {response.get("action_needed", "Not specified")}', normal))
+            elements.append(Spacer(1, 2))
+            elements.append(Paragraph(f'<b>Impact Level:</b> {response.get("impact", "Not specified")}', normal))
+            elements.append(Spacer(1, 16))
+            found = True
         if not found:
             elements.append(Paragraph('No survey responses found.', normal))
         doc.build(elements)
