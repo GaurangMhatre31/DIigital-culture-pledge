@@ -650,20 +650,22 @@ def create_app():
             flash('You are not authorized to download this report.', 'error')
             return redirect(url_for('user_dashboard'))
         user = HindalcoPledge.query.get_or_404(user_id)
-        surveys = SurveyResponse.query.filter_by(user_id=user.id).order_by(SurveyResponse.created_at.desc()).all()
+        # Remove survey responses from the report
+        # surveys = SurveyResponse.query.filter_by(user_id=user.id).order_by(SurveyResponse.created_at.desc()).all()
 
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
         elements = []
         styles = getSampleStyleSheet()
-        title_style = ParagraphStyle('title', parent=styles['Title'], fontSize=28, alignment=1, textColor=colors.HexColor('#2346b0'), spaceAfter=20)
-        section_header_style = ParagraphStyle('section_header', parent=styles['Heading2'], fontSize=20, alignment=1, textColor=colors.white, backColor=colors.HexColor('#2346b0'), spaceAfter=10, spaceBefore=20)
+        title_style = ParagraphStyle('title', parent=styles['Title'], fontSize=28, alignment=1, textColor=colors.HexColor('#2346b0'), spaceAfter=24)
+        section_header_style = ParagraphStyle('section_header', parent=styles['Heading2'], fontSize=20, alignment=1, textColor=colors.white, backColor=colors.HexColor('#2346b0'), spaceAfter=14, spaceBefore=24)
         table_header_style = ParagraphStyle('table_header', parent=styles['Heading4'], fontSize=14, alignment=1, textColor=colors.white)
         # Title
         elements.append(Paragraph('DIGITAL CULTURE TRANSFORMATION REPORT', title_style))
-        elements.append(Spacer(1, 12))
+        elements.append(Spacer(1, 18))
         # Personal Info Section
         elements.append(Paragraph('PERSONAL INFORMATION', section_header_style))
+        elements.append(Spacer(1, 8))
         personal_data = [
             ['Field', 'Details'],
             ['Full Name', user.name or 'Not specified'],
@@ -685,9 +687,10 @@ def create_app():
             ('FONTSIZE', (0,0), (-1,-1), 12),
         ]))
         elements.append(personal_table)
-        elements.append(Spacer(1, 18))
+        elements.append(Spacer(1, 24))
         # Digital North Star Section
         elements.append(Paragraph('DIGITAL NORTH STAR', section_header_style))
+        elements.append(Spacer(1, 8))
         north_star_data = [
             ['Component', 'Description'],
             ['Problem Statement', user.problem_statement or 'Not specified'],
@@ -706,9 +709,10 @@ def create_app():
             ('FONTSIZE', (0,0), (-1,-1), 12),
         ]))
         elements.append(north_star_table)
-        elements.append(Spacer(1, 18))
+        elements.append(Spacer(1, 24))
         # Behavior Change Commitments Section
         elements.append(Paragraph('BEHAVIOR CHANGE COMMITMENTS', section_header_style))
+        elements.append(Spacer(1, 8))
         # START Behaviors
         elements.append(Paragraph('START Behaviors', ParagraphStyle('subheader', parent=styles['Heading3'], fontSize=16, textColor=colors.HexColor('#2346b0'), spaceAfter=8)))
         start_data = [
@@ -728,7 +732,7 @@ def create_app():
             ('FONTSIZE', (0,0), (-1,-1), 12),
         ]))
         elements.append(start_table)
-        elements.append(Spacer(1, 12))
+        elements.append(Spacer(1, 16))
         # REDUCE Behaviors
         elements.append(Paragraph('REDUCE Behaviors', ParagraphStyle('subheader', parent=styles['Heading3'], fontSize=16, textColor=colors.HexColor('#2346b0'), spaceAfter=8)))
         reduce_data = [
@@ -748,7 +752,7 @@ def create_app():
             ('FONTSIZE', (0,0), (-1,-1), 12),
         ]))
         elements.append(reduce_table)
-        elements.append(Spacer(1, 12))
+        elements.append(Spacer(1, 16))
         # STOP Behaviors
         elements.append(Paragraph('STOP Behaviors', ParagraphStyle('subheader', parent=styles['Heading3'], fontSize=16, textColor=colors.HexColor('#2346b0'), spaceAfter=8)))
         stop_data = [
@@ -768,9 +772,10 @@ def create_app():
             ('FONTSIZE', (0,0), (-1,-1), 12),
         ]))
         elements.append(stop_table)
-        elements.append(Spacer(1, 18))
+        elements.append(Spacer(1, 24))
         # Practice Commitments Section
         elements.append(Paragraph('PRACTICE COMMITMENTS', section_header_style))
+        elements.append(Spacer(1, 8))
         practice_data = [
             ['Practice Type', 'Description'],
             ['Weekly Practice', user.weekly_practice_1 or ''],
@@ -793,34 +798,8 @@ def create_app():
             ('FONTSIZE', (0,0), (-1,-1), 12),
         ]))
         elements.append(practice_table)
-        elements.append(Spacer(1, 18))
-        # Survey Responses Section (if any)
-        if surveys:
-            elements.append(Paragraph('SURVEY RESPONSES', section_header_style))
-            for idx, survey in enumerate(surveys, 1):
-                try:
-                    data = json.loads(survey.response_data) if survey.response_data else {}
-                except Exception:
-                    data = {}
-                elements.append(Paragraph(f'Survey #{idx}', styles['Heading4']))
-                survey_table_data = [['Field', 'Value']]
-                for k, v in data.items():
-                    survey_table_data.append([str(k), str(v)])
-                if survey.expert_comments:
-                    survey_table_data.append(['Expert Comments', survey.expert_comments])
-                survey_table = Table(survey_table_data, colWidths=[180, 300])
-                survey_table.setStyle(TableStyle([
-                    ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#009e73')),
-                    ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-                    ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-                    ('ALIGN', (0,0), (-1,0), 'CENTER'),
-                    ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#eafaf3')),
-                    ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
-                    ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
-                    ('FONTSIZE', (0,0), (-1,-1), 12),
-                ]))
-                elements.append(survey_table)
-                elements.append(Spacer(1, 12))
+        elements.append(Spacer(1, 24))
+        # No survey responses section
         doc.build(elements)
         buffer.seek(0)
         filename = f"Digital_Culture_Transformation_Report_{user.name.replace(' ', '_')}.pdf"
