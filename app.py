@@ -19,8 +19,8 @@ from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -640,71 +640,186 @@ def create_app():
     @app.route('/download-user-report/<int:user_id>')
     @login_required
     def download_user_report(user_id):
-        # Only allow if admin or the user themselves
-        if not (session.get('admin_logged_in') or session.get('user_id') == user_id):
-            flash('Access denied.', 'error')
+        # Only allow user to download their own report, or admin to download any
+        if session.get('user_id') != user_id and not session.get('admin_logged_in'):
+            flash('You are not authorized to download this report.', 'error')
             return redirect(url_for('user_dashboard'))
         user = HindalcoPledge.query.get_or_404(user_id)
         surveys = SurveyResponse.query.filter_by(user_id=user.id).order_by(SurveyResponse.created_at.desc()).all()
-        # Generate PDF
+
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter)
-        styles = getSampleStyleSheet()
+        doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
         elements = []
-        elements.append(Paragraph(f"<b>Survey Report for {user.name} ({user.email})</b>", styles['Title']))
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle('title', parent=styles['Title'], fontSize=28, alignment=1, textColor=colors.HexColor('#2346b0'), spaceAfter=20)
+        section_header_style = ParagraphStyle('section_header', parent=styles['Heading2'], fontSize=20, alignment=1, textColor=colors.white, backColor=colors.HexColor('#2346b0'), spaceAfter=10, spaceBefore=20)
+        table_header_style = ParagraphStyle('table_header', parent=styles['Heading4'], fontSize=14, alignment=1, textColor=colors.white)
+        # Title
+        elements.append(Paragraph('DIGITAL CULTURE TRANSFORMATION REPORT', title_style))
         elements.append(Spacer(1, 12))
-        for idx, survey in enumerate(surveys, 1):
-            elements.append(Paragraph(f"<b>Survey #{idx} - Date: {survey.created_at.strftime('%Y-%m-%d %H:%M')}</b>", styles['Heading2']))
-            try:
-                data = json.loads(survey.response_data)
-            except:
-                data = {}
-            # Weekly
-            if 'weekly_practice_1' in data:
-                elements.append(Paragraph("<b>Weekly Practice 1</b>", styles['Heading3']))
-                wp = data['weekly_practice_1']
-                elements.append(Paragraph(f"Impact: {wp.get('impact', 'N/A')}", styles['Normal']))
-                elements.append(Paragraph(f"Action Taken: {wp.get('action_taken', 'N/A')}", styles['Normal']))
-                elements.append(Paragraph(f"Action Needed: {wp.get('action_needed', 'N/A')}", styles['Normal']))
-                elements.append(Spacer(1, 6))
-            # Monthly
-            for i in range(1, 3):
-                key = f'monthly_practice_{i}'
-                if key in data:
-                    mp = data[key]
-                    elements.append(Paragraph(f"<b>Monthly Practice {i}</b>", styles['Heading3']))
-                    elements.append(Paragraph(f"Impact: {mp.get('impact', 'N/A')}", styles['Normal']))
-                    elements.append(Paragraph(f"Action Taken: {mp.get('action_taken', 'N/A')}", styles['Normal']))
-                    elements.append(Paragraph(f"Action Needed: {mp.get('action_needed', 'N/A')}", styles['Normal']))
-                    elements.append(Spacer(1, 6))
-            # Quarterly
-            for i in range(1, 3):
-                key = f'quarterly_practice_{i}'
-                if key in data:
-                    qp = data[key]
-                    elements.append(Paragraph(f"<b>Quarterly Practice {i}</b>", styles['Heading3']))
-                    elements.append(Paragraph(f"Impact: {qp.get('impact', 'N/A')}", styles['Normal']))
-                    elements.append(Paragraph(f"Action Taken: {qp.get('action_taken', 'N/A')}", styles['Normal']))
-                    elements.append(Paragraph(f"Action Needed: {qp.get('action_needed', 'N/A')}", styles['Normal']))
-                    elements.append(Spacer(1, 6))
-            # Behaviors
-            for btype in ['start', 'reduce', 'stop']:
-                for i in range(1, 3):
-                    key = f'behavior_{btype}_{i}'
-                    if key in data:
-                        beh = data[key]
-                        elements.append(Paragraph(f"<b>{btype.upper()} Behavior {i}</b>", styles['Heading3']))
-                        elements.append(Paragraph(f"Action Taken: {beh.get('action_taken', 'N/A')}", styles['Normal']))
-                        elements.append(Paragraph(f"Action Needed: {beh.get('action_needed', 'N/A')}", styles['Normal']))
-                        elements.append(Spacer(1, 6))
-            if survey.expert_comments:
-                elements.append(Paragraph(f"<b>Expert Comments:</b> {survey.expert_comments}", styles['Normal']))
-            elements.append(Spacer(1, 12))
-        if not surveys:
-            elements.append(Paragraph("No surveys completed yet.", styles['Normal']))
+        # Personal Info Section
+        elements.append(Paragraph('PERSONAL INFORMATION', section_header_style))
+        personal_data = [
+            ['Field', 'Details'],
+            ['Full Name', user.name or 'Not specified'],
+            ['Email Address', user.email or 'Not specified'],
+            ['Employee ID', user.employee_id or 'Not specified'],
+            ['Phone Number', user.phone or 'Not specified'],
+            ['Designation/Role', user.designation or 'Not specified'],
+            ['Signature Date', 'Not specified'],
+        ]
+        personal_table = Table(personal_data, colWidths=[180, 300])
+        personal_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#2346b0')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('ALIGN', (0,0), (-1,0), 'CENTER'),
+            ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#f6fafd')),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#dbe5f1')),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+        ]))
+        elements.append(personal_table)
+        elements.append(Spacer(1, 18))
+        # Digital North Star Section
+        elements.append(Paragraph('DIGITAL NORTH STAR', section_header_style))
+        north_star_data = [
+            ['Component', 'Description'],
+            ['Problem Statement', user.problem_statement or 'Not specified'],
+            ['Success Metric', user.success_metric or 'Not specified'],
+            ['Timeline', user.timeline or 'Not specified'],
+        ]
+        north_star_table = Table(north_star_data, colWidths=[180, 300])
+        north_star_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#009e73')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('ALIGN', (0,0), (-1,0), 'CENTER'),
+            ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#eafaf3')),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+        ]))
+        elements.append(north_star_table)
+        elements.append(Spacer(1, 18))
+        # Behavior Change Commitments Section
+        elements.append(Paragraph('BEHAVIOR CHANGE COMMITMENTS', section_header_style))
+        # START Behaviors
+        elements.append(Paragraph('START Behaviors', ParagraphStyle('subheader', parent=styles['Heading3'], fontSize=16, textColor=colors.HexColor('#2346b0'), spaceAfter=8)))
+        start_data = [
+            ['Behavior Type', 'Description'],
+            ['START Behavior 1', user.behavior_start_1 or ''],
+            ['START Behavior 2', user.behavior_start_2 or ''],
+        ]
+        start_table = Table(start_data, colWidths=[180, 300])
+        start_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#009e73')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('ALIGN', (0,0), (-1,0), 'CENTER'),
+            ('BACKGROUND', (0,1), (-1,-1), colors.white),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+        ]))
+        elements.append(start_table)
+        elements.append(Spacer(1, 12))
+        # REDUCE Behaviors
+        elements.append(Paragraph('REDUCE Behaviors', ParagraphStyle('subheader', parent=styles['Heading3'], fontSize=16, textColor=colors.HexColor('#2346b0'), spaceAfter=8)))
+        reduce_data = [
+            ['Behavior Type', 'Description'],
+            ['REDUCE Behavior 1', user.behavior_reduce_1 or ''],
+            ['REDUCE Behavior 2', user.behavior_reduce_2 or ''],
+        ]
+        reduce_table = Table(reduce_data, colWidths=[180, 300])
+        reduce_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#f7a600')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('ALIGN', (0,0), (-1,0), 'CENTER'),
+            ('BACKGROUND', (0,1), (-1,-1), colors.white),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#ffe5b4')),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+        ]))
+        elements.append(reduce_table)
+        elements.append(Spacer(1, 12))
+        # STOP Behaviors
+        elements.append(Paragraph('STOP Behaviors', ParagraphStyle('subheader', parent=styles['Heading3'], fontSize=16, textColor=colors.HexColor('#2346b0'), spaceAfter=8)))
+        stop_data = [
+            ['Behavior Type', 'Description'],
+            ['STOP Behavior 1', user.behavior_stop_1 or ''],
+            ['STOP Behavior 2', user.behavior_stop_2 or ''],
+        ]
+        stop_table = Table(stop_data, colWidths=[180, 300])
+        stop_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#d7263d')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('ALIGN', (0,0), (-1,0), 'CENTER'),
+            ('BACKGROUND', (0,1), (-1,-1), colors.white),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#f7b6b6')),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+        ]))
+        elements.append(stop_table)
+        elements.append(Spacer(1, 18))
+        # Practice Commitments Section
+        elements.append(Paragraph('PRACTICE COMMITMENTS', section_header_style))
+        practice_data = [
+            ['Practice Type', 'Description'],
+            ['Weekly Practice', user.weekly_practice_1 or ''],
+            ['Monthly Practice 1', user.monthly_practice_1 or ''],
+            ['Monthly Practice 2', user.monthly_practice_2 or ''],
+            ['Quarterly Practice 1', user.quarterly_practice_1 or ''],
+            ['Quarterly Practice 2', user.quarterly_practice_2 or ''],
+            ['Custom Practice', user.custom_practice or ''],
+            ['Custom Frequency', user.custom_frequency or ''],
+        ]
+        practice_table = Table(practice_data, colWidths=[180, 300])
+        practice_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#2346b0')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('ALIGN', (0,0), (-1,0), 'CENTER'),
+            ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#f6fafd')),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#dbe5f1')),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+        ]))
+        elements.append(practice_table)
+        elements.append(Spacer(1, 18))
+        # Survey Responses Section (if any)
+        if surveys:
+            elements.append(Paragraph('SURVEY RESPONSES', section_header_style))
+            for idx, survey in enumerate(surveys, 1):
+                try:
+                    data = json.loads(survey.response_data) if survey.response_data else {}
+                except Exception:
+                    data = {}
+                elements.append(Paragraph(f'Survey #{idx}', styles['Heading4']))
+                survey_table_data = [['Field', 'Value']]
+                for k, v in data.items():
+                    survey_table_data.append([str(k), str(v)])
+                if survey.expert_comments:
+                    survey_table_data.append(['Expert Comments', survey.expert_comments])
+                survey_table = Table(survey_table_data, colWidths=[180, 300])
+                survey_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#009e73')),
+                    ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+                    ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                    ('ALIGN', (0,0), (-1,0), 'CENTER'),
+                    ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#eafaf3')),
+                    ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
+                    ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+                    ('FONTSIZE', (0,0), (-1,-1), 12),
+                ]))
+                elements.append(survey_table)
+                elements.append(Spacer(1, 12))
         doc.build(elements)
         buffer.seek(0)
-        return send_file(buffer, as_attachment=True, download_name=f"{user.name}_survey_report.pdf", mimetype='application/pdf')
+        filename = f"Digital_Culture_Transformation_Report_{user.name.replace(' ', '_')}.pdf"
+        return send_file(buffer, as_attachment=True, download_name=filename, mimetype='application/pdf')
     
     @app.route('/download-report')
     @login_required
