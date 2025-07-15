@@ -799,6 +799,52 @@ def create_app():
         ]))
         elements.append(practice_table)
         elements.append(Spacer(1, 24))
+        # Survey Responses Section (well-formatted, impact highlighted)
+        surveys = SurveyResponse.query.filter_by(user_id=user.id).order_by(SurveyResponse.created_at.desc()).all()
+        if surveys:
+            elements.append(Paragraph('SURVEY RESPONSES', section_header_style))
+            elements.append(Spacer(1, 8))
+            for idx, survey in enumerate(surveys, 1):
+                try:
+                    data = json.loads(survey.response_data) if survey.response_data else {}
+                except Exception:
+                    data = {}
+                # Only show practices with impact
+                for key in ['weekly_practice_1', 'monthly_practice_1', 'monthly_practice_2', 'quarterly_practice_1', 'quarterly_practice_2']:
+                    practice = data.get(key)
+                    if practice and isinstance(practice, dict):
+                        impact = practice.get('impact', '').upper()
+                        action_taken = practice.get('action_taken', '')
+                        action_needed = practice.get('action_needed', '')
+                        # Color for impact
+                        if impact == 'HIGH':
+                            impact_color = colors.HexColor('#009e73')
+                        elif impact == 'MEDIUM':
+                            impact_color = colors.HexColor('#f7a600')
+                        elif impact == 'LOW':
+                            impact_color = colors.HexColor('#d7263d')
+                        else:
+                            impact_color = colors.black
+                        # Table for this practice
+                        practice_label = key.replace('_', ' ').title()
+                        table_data = [
+                            [Paragraph('<b>Practice</b>', styles['Normal']), Paragraph(practice_label, styles['Normal'])],
+                            [Paragraph('<b>Impact Level</b>', styles['Normal']), Paragraph(f'<font color="{impact_color}">{impact}</font>', styles['Normal'])],
+                            [Paragraph('<b>Action Taken</b>', styles['Normal']), Paragraph(action_taken or 'Not specified', styles['Normal'])],
+                            [Paragraph('<b>Action Needed</b>', styles['Normal']), Paragraph(action_needed or 'Not specified', styles['Normal'])],
+                        ]
+                        t = Table(table_data, colWidths=[150, 330])
+                        t.setStyle(TableStyle([
+                            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#f6fafd')),
+                            ('BACKGROUND', (0,1), (-1,1), colors.HexColor('#f6fafd')),
+                            ('BACKGROUND', (0,2), (-1,2), colors.HexColor('#f6fafd')),
+                            ('BACKGROUND', (0,3), (-1,3), colors.HexColor('#f6fafd')),
+                            ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#2346b0')),
+                            ('INNERGRID', (0,0), (-1,-1), 0.25, colors.HexColor('#dbe5f1')),
+                            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+                        ]))
+                        elements.append(t)
+                        elements.append(Spacer(1, 12))
         # No survey responses section
         doc.build(elements)
         buffer.seek(0)
