@@ -13,7 +13,12 @@ def clean_text(text):
     """Clean and format text data"""
     if pd.isna(text) or text is None:
         return ""
-    return str(text).strip()
+    return re.sub(r'\s+', ' ', str(text)).strip()
+
+def normalize_email(email):
+    if pd.isna(email) or email is None:
+        return ""
+    return str(email).strip().lower()
 
 def clean_phone(phone):
     """Clean phone number to digits only"""
@@ -31,11 +36,12 @@ def load_all_participants_from_csv():
         df = pd.read_csv(csv_file)
         print(f"CSV loaded: {len(df)} rows, {len(df.columns)} columns")
         participants = []
+        seen_emails = set()
         for index, row in df.iterrows():
             try:
                 sr_no = clean_text(row.get('Sr', index+1))
                 name = clean_text(row.get('Name'))
-                email = clean_text(row.get('Email'))
+                email = normalize_email(row.get('Email'))
                 phone = clean_phone(row.get('Telephone'))
                 employee_id = clean_text(row.get('Employee_ID', f"HIN{str(index+1).zfill(3)}"))
                 designation = clean_text(row.get('Designation', 'Digital Transformation Specialist'))
@@ -80,6 +86,9 @@ def load_all_participants_from_csv():
                     'behavior_stop_2': behavior_stop_2
                 }
                 if name and email:
+                    if email in seen_emails:
+                        print(f"Warning: Duplicate email found: {email}")
+                    seen_emails.add(email)
                     participants.append(participant_data)
                     print(f"Loaded: {name} - {email}")
             except Exception as e:
