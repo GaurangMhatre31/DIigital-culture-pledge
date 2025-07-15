@@ -865,7 +865,6 @@ def create_app():
         elements.append(practice_table)
         # Survey Responses
         add_section('SURVEY RESPONSES')
-        survey_table_data = [['Practice', 'Impact Level', 'Action Taken', 'Action Needed']]
         found = False
         if surveys:
             for survey in surveys:
@@ -877,33 +876,16 @@ def create_app():
                     practice = data.get(key)
                     if practice and isinstance(practice, dict):
                         found = True
-                        survey_table_data.append([
-                            key.replace('_', ' ').title(),
-                            practice.get('impact', 'Not specified'),
-                            practice.get('action_taken', 'Not specified'),
-                            practice.get('action_needed', 'Not specified'),
-                        ])
-        if found:
-            survey_table = Table(survey_table_data, colWidths=[120, 100, 180, 180], rowHeights=40)
-            survey_table.setStyle(TableStyle([
-                ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#eafaf3')),
-                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-                ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
-                ('FONTSIZE', (0,0), (-1,-1), 12),
-                ('ALIGN', (0,0), (-1,-1), 'LEFT'),
-                ('VALIGN', (0,0), (-1,-1), 'TOP'),
-                ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
-                ('LEFTPADDING', (0,0), (-1,-1), 16),
-                ('RIGHTPADDING', (0,0), (-1,-1), 16),
-                ('TOPPADDING', (0,0), (-1,-1), 14),
-                ('BOTTOMPADDING', (0,0), (-1,-1), 14),
-            ]))
-            # Enable word wrap for all cells
-            for row in range(1, len(survey_table_data)):
-                for col in range(4):
-                    survey_table._cellvalues[row][col] = Paragraph(str(survey_table_data[row][col]), normal)
-            elements.append(survey_table)
-        else:
+                        elements.append(Spacer(1, 10))
+                        elements.append(Paragraph(f'<b>Practice:</b> {key.replace("_", " ").title()}', normal))
+                        elements.append(Spacer(1, 2))
+                        elements.append(Paragraph(f'<b>Impact Level:</b> {practice.get("impact", "Not specified")}', normal))
+                        elements.append(Spacer(1, 2))
+                        elements.append(Paragraph(f'<b>Action Taken:</b> {practice.get("action_taken", "Not specified")}', normal))
+                        elements.append(Spacer(1, 2))
+                        elements.append(Paragraph(f'<b>Action Needed:</b> {practice.get("action_needed", "Not specified")}', normal))
+                        elements.append(Spacer(1, 16))
+        if not found:
             elements.append(Paragraph('No survey responses found.', normal))
         doc.build(elements)
         buffer.seek(0)
