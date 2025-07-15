@@ -686,20 +686,21 @@ def create_app():
         user = HindalcoPledge.query.get_or_404(user_id)
         surveys = SurveyResponse.query.filter_by(user_id=user.id).order_by(SurveyResponse.created_at.asc()).all()
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
+        doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=28)
         elements = []
         styles = getSampleStyleSheet()
         normal = styles['Normal']
         normal.fontName = 'Helvetica'
         normal.fontSize = 12
-        normal.leading = 16
+        normal.leading = 18
         # Helper for section
         def add_section(title):
+            elements.append(Spacer(1, 18))
             elements.append(Paragraph(f'<b>{title}</b>', styles['Heading2']))
-            elements.append(Spacer(1, 8))
+            elements.append(Spacer(1, 12))
         # Title
         elements.append(Paragraph('DIGITAL CULTURE TRANSFORMATION REPORT', styles['Title']))
-        elements.append(Spacer(1, 16))
+        elements.append(Spacer(1, 24))
         # Personal Information
         add_section('PERSONAL INFORMATION')
         personal_data = [
@@ -710,19 +711,19 @@ def create_app():
             ['Designation/Role', user.designation or 'Not specified'],
             ['Signature Date', 'Not specified'],
         ]
-        personal_table = Table(personal_data, colWidths=[180, 300])
+        personal_table = Table(personal_data, colWidths=[200, 320], rowHeights=28)
         personal_table.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (0,-1), colors.HexColor('#f6fafd')),
             ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
             ('FONTSIZE', (0,0), (-1,-1), 12),
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-            ('LEFTPADDING', (0,0), (-1,-1), 8),
-            ('RIGHTPADDING', (0,0), (-1,-1), 8),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+            ('TOPPADDING', (0,0), (-1,-1), 10),
+            ('LEFTPADDING', (0,0), (-1,-1), 12),
+            ('RIGHTPADDING', (0,0), (-1,-1), 12),
         ]))
         elements.append(personal_table)
-        elements.append(Spacer(1, 12))
         # Digital North Star
         add_section('DIGITAL NORTH STAR')
         north_star_data = [
@@ -730,29 +731,30 @@ def create_app():
             ['Success Metric', user.success_metric or 'Not specified'],
             ['Timeline', user.timeline or 'Not specified'],
         ]
-        north_star_table = Table(north_star_data, colWidths=[180, 300])
+        north_star_table = Table(north_star_data, colWidths=[200, 320], rowHeights=28)
         north_star_table.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (0,-1), colors.HexColor('#eafaf3')),
             ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
             ('FONTSIZE', (0,0), (-1,-1), 12),
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-            ('LEFTPADDING', (0,0), (-1,-1), 8),
-            ('RIGHTPADDING', (0,0), (-1,-1), 8),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+            ('TOPPADDING', (0,0), (-1,-1), 10),
+            ('LEFTPADDING', (0,0), (-1,-1), 12),
+            ('RIGHTPADDING', (0,0), (-1,-1), 12),
         ]))
         elements.append(north_star_table)
-        elements.append(Spacer(1, 12))
         # Behavior Change Commitments
         add_section('BEHAVIOR CHANGE COMMITMENTS')
         # START Behaviors Table
         elements.append(Paragraph('START Behaviors', styles['Heading3']))
+        elements.append(Spacer(1, 6))
         start_data = [
             ['Behavior Type', 'Description'],
             ['START Behavior 1', user.behavior_start_1 or 'Not specified'],
             ['START Behavior 2', user.behavior_start_2 or 'Not specified'],
         ]
-        start_table = Table(start_data, colWidths=[180, 300])
+        start_table = Table(start_data, colWidths=[200, 320], rowHeights=28)
         start_table.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#d9f9e6')),
             ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
@@ -761,19 +763,22 @@ def create_app():
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
             ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
-            ('LEFTPADDING', (0,0), (-1,-1), 8),
-            ('RIGHTPADDING', (0,0), (-1,-1), 8),
+            ('LEFTPADDING', (0,0), (-1,-1), 12),
+            ('RIGHTPADDING', (0,0), (-1,-1), 12),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+            ('TOPPADDING', (0,0), (-1,-1), 10),
         ]))
         elements.append(start_table)
-        elements.append(Spacer(1, 8))
+        elements.append(Spacer(1, 10))
         # REDUCE Behaviors Table
         elements.append(Paragraph('REDUCE Behaviors', styles['Heading3']))
+        elements.append(Spacer(1, 6))
         reduce_data = [
             ['Behavior Type', 'Description'],
             ['REDUCE Behavior 1', user.behavior_reduce_1 or 'Not specified'],
             ['REDUCE Behavior 2', user.behavior_reduce_2 or 'Not specified'],
         ]
-        reduce_table = Table(reduce_data, colWidths=[180, 300])
+        reduce_table = Table(reduce_data, colWidths=[200, 320], rowHeights=28)
         reduce_table.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#fff7e6')),
             ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
@@ -782,19 +787,22 @@ def create_app():
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
             ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#ffe5b4')),
-            ('LEFTPADDING', (0,0), (-1,-1), 8),
-            ('RIGHTPADDING', (0,0), (-1,-1), 8),
+            ('LEFTPADDING', (0,0), (-1,-1), 12),
+            ('RIGHTPADDING', (0,0), (-1,-1), 12),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+            ('TOPPADDING', (0,0), (-1,-1), 10),
         ]))
         elements.append(reduce_table)
-        elements.append(Spacer(1, 8))
+        elements.append(Spacer(1, 10))
         # STOP Behaviors Table
         elements.append(Paragraph('STOP Behaviors', styles['Heading3']))
+        elements.append(Spacer(1, 6))
         stop_data = [
             ['Behavior Type', 'Description'],
             ['STOP Behavior 1', user.behavior_stop_1 or 'Not specified'],
             ['STOP Behavior 2', user.behavior_stop_2 or 'Not specified'],
         ]
-        stop_table = Table(stop_data, colWidths=[180, 300])
+        stop_table = Table(stop_data, colWidths=[200, 320], rowHeights=28)
         stop_table.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#ffe6e6')),
             ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
@@ -803,11 +811,12 @@ def create_app():
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
             ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#f7b6b6')),
-            ('LEFTPADDING', (0,0), (-1,-1), 8),
-            ('RIGHTPADDING', (0,0), (-1,-1), 8),
+            ('LEFTPADDING', (0,0), (-1,-1), 12),
+            ('RIGHTPADDING', (0,0), (-1,-1), 12),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+            ('TOPPADDING', (0,0), (-1,-1), 10),
         ]))
         elements.append(stop_table)
-        elements.append(Spacer(1, 12))
         # Practice Commitments
         add_section('PRACTICE COMMITMENTS')
         practice_data = [
@@ -820,7 +829,7 @@ def create_app():
             ['Custom Practice', user.custom_practice or 'Not specified'],
             ['Custom Frequency', user.custom_frequency or 'Not specified'],
         ]
-        practice_table = Table(practice_data, colWidths=[180, 300])
+        practice_table = Table(practice_data, colWidths=[200, 320], rowHeights=28)
         practice_table.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#f6fafd')),
             ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
@@ -829,11 +838,12 @@ def create_app():
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
             ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#dbe5f1')),
-            ('LEFTPADDING', (0,0), (-1,-1), 8),
-            ('RIGHTPADDING', (0,0), (-1,-1), 8),
+            ('LEFTPADDING', (0,0), (-1,-1), 12),
+            ('RIGHTPADDING', (0,0), (-1,-1), 12),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+            ('TOPPADDING', (0,0), (-1,-1), 10),
         ]))
         elements.append(practice_table)
-        elements.append(Spacer(1, 12))
         # Survey Responses
         add_section('SURVEY RESPONSES')
         survey_table_data = [['Practice', 'Impact Level', 'Action Taken', 'Action Needed']]
@@ -855,19 +865,19 @@ def create_app():
                             practice.get('action_needed', 'Not specified'),
                         ])
         if found:
-            survey_table = Table(survey_table_data, colWidths=[120, 80, 140, 140])
+            survey_table = Table(survey_table_data, colWidths=[140, 100, 140, 140], rowHeights=32)
             survey_table.setStyle(TableStyle([
                 ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#eafaf3')),
                 ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
                 ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
-                ('FONTSIZE', (0,0), (-1,-1), 11),
+                ('FONTSIZE', (0,0), (-1,-1), 12),
                 ('ALIGN', (0,0), (-1,-1), 'LEFT'),
                 ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
                 ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
-                ('LEFTPADDING', (0,0), (-1,-1), 8),
-                ('RIGHTPADDING', (0,0), (-1,-1), 8),
-                ('TOPPADDING', (0,0), (-1,-1), 6),
-                ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+                ('LEFTPADDING', (0,0), (-1,-1), 14),
+                ('RIGHTPADDING', (0,0), (-1,-1), 14),
+                ('TOPPADDING', (0,0), (-1,-1), 12),
+                ('BOTTOMPADDING', (0,0), (-1,-1), 12),
             ]))
             elements.append(survey_table)
         else:
