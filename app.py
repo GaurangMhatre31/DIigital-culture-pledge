@@ -658,55 +658,139 @@ def create_app():
         normal.fontName = 'Helvetica'
         normal.fontSize = 12
         normal.leading = 16
+        # Helper for section
         def add_section(title):
             elements.append(Paragraph(f'<b>{title}</b>', styles['Heading2']))
             elements.append(Spacer(1, 8))
-        def add_field(label, value):
-            elements.append(Paragraph(f'<b>{label}</b> {value}', normal))
         # Title
         elements.append(Paragraph('DIGITAL CULTURE TRANSFORMATION REPORT', styles['Title']))
         elements.append(Spacer(1, 16))
         # Personal Information
         add_section('PERSONAL INFORMATION')
-        add_field('Full Name', user.name or 'Not specified')
-        add_field('Email Address', user.email or 'Not specified')
-        add_field('Employee ID', user.employee_id or 'Not specified')
-        add_field('Phone Number', user.phone or 'Not specified')
-        add_field('Designation/Role', user.designation or 'Not specified')
-        add_field('Signature Date', 'Not specified')
+        personal_data = [
+            ['Full Name', user.name or 'Not specified'],
+            ['Email Address', user.email or 'Not specified'],
+            ['Employee ID', user.employee_id or 'Not specified'],
+            ['Phone Number', user.phone or 'Not specified'],
+            ['Designation/Role', user.designation or 'Not specified'],
+            ['Signature Date', 'Not specified'],
+        ]
+        personal_table = Table(personal_data, colWidths=[180, 300])
+        personal_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (0,-1), colors.HexColor('#f6fafd')),
+            ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ]))
+        elements.append(personal_table)
         elements.append(Spacer(1, 12))
         # Digital North Star
         add_section('DIGITAL NORTH STAR')
-        add_field('Problem Statement', user.problem_statement or 'Not specified')
-        add_field('Success Metric', user.success_metric or 'Not specified')
-        add_field('Timeline', user.timeline or 'Not specified')
+        north_star_data = [
+            ['Problem Statement', user.problem_statement or 'Not specified'],
+            ['Success Metric', user.success_metric or 'Not specified'],
+            ['Timeline', user.timeline or 'Not specified'],
+        ]
+        north_star_table = Table(north_star_data, colWidths=[180, 300])
+        north_star_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (0,-1), colors.HexColor('#eafaf3')),
+            ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ]))
+        elements.append(north_star_table)
         elements.append(Spacer(1, 12))
         # Behavior Change Commitments
         add_section('BEHAVIOR CHANGE COMMITMENTS')
+        # START Behaviors Table
         elements.append(Paragraph('START Behaviors', styles['Heading3']))
-        add_field('START Behavior 1', user.behavior_start_1 or 'Not specified')
-        add_field('START Behavior 2', user.behavior_start_2 or 'Not specified')
-        elements.append(Spacer(1, 6))
+        start_data = [
+            ['Behavior Type', 'Description'],
+            ['START Behavior 1', user.behavior_start_1 or 'Not specified'],
+            ['START Behavior 2', user.behavior_start_2 or 'Not specified'],
+        ]
+        start_table = Table(start_data, colWidths=[180, 300])
+        start_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#d9f9e6')),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
+        ]))
+        elements.append(start_table)
+        elements.append(Spacer(1, 8))
+        # REDUCE Behaviors Table
         elements.append(Paragraph('REDUCE Behaviors', styles['Heading3']))
-        add_field('REDUCE Behavior 1', user.behavior_reduce_1 or 'Not specified')
-        add_field('REDUCE Behavior 2', user.behavior_reduce_2 or 'Not specified')
-        elements.append(Spacer(1, 6))
+        reduce_data = [
+            ['Behavior Type', 'Description'],
+            ['REDUCE Behavior 1', user.behavior_reduce_1 or 'Not specified'],
+            ['REDUCE Behavior 2', user.behavior_reduce_2 or 'Not specified'],
+        ]
+        reduce_table = Table(reduce_data, colWidths=[180, 300])
+        reduce_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#fff7e6')),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#ffe5b4')),
+        ]))
+        elements.append(reduce_table)
+        elements.append(Spacer(1, 8))
+        # STOP Behaviors Table
         elements.append(Paragraph('STOP Behaviors', styles['Heading3']))
-        add_field('STOP Behavior 1', user.behavior_stop_1 or 'Not specified')
-        add_field('STOP Behavior 2', user.behavior_stop_2 or 'Not specified')
+        stop_data = [
+            ['Behavior Type', 'Description'],
+            ['STOP Behavior 1', user.behavior_stop_1 or 'Not specified'],
+            ['STOP Behavior 2', user.behavior_stop_2 or 'Not specified'],
+        ]
+        stop_table = Table(stop_data, colWidths=[180, 300])
+        stop_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#ffe6e6')),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#f7b6b6')),
+        ]))
+        elements.append(stop_table)
         elements.append(Spacer(1, 12))
         # Practice Commitments
         add_section('PRACTICE COMMITMENTS')
-        add_field('Weekly Practice', user.weekly_practice_1 or 'Not specified')
-        add_field('Monthly Practice 1', user.monthly_practice_1 or 'Not specified')
-        add_field('Monthly Practice 2', user.monthly_practice_2 or 'Not specified')
-        add_field('Quarterly Practice 1', user.quarterly_practice_1 or 'Not specified')
-        add_field('Quarterly Practice 2', user.quarterly_practice_2 or 'Not specified')
-        add_field('Custom Practice', user.custom_practice or 'Not specified')
-        add_field('Custom Frequency', user.custom_frequency or 'Not specified')
+        practice_data = [
+            ['Practice Type', 'Description'],
+            ['Weekly Practice', user.weekly_practice_1 or 'Not specified'],
+            ['Monthly Practice 1', user.monthly_practice_1 or 'Not specified'],
+            ['Monthly Practice 2', user.monthly_practice_2 or 'Not specified'],
+            ['Quarterly Practice 1', user.quarterly_practice_1 or 'Not specified'],
+            ['Quarterly Practice 2', user.quarterly_practice_2 or 'Not specified'],
+            ['Custom Practice', user.custom_practice or 'Not specified'],
+            ['Custom Frequency', user.custom_frequency or 'Not specified'],
+        ]
+        practice_table = Table(practice_data, colWidths=[180, 300])
+        practice_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#f6fafd')),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#dbe5f1')),
+        ]))
+        elements.append(practice_table)
         elements.append(Spacer(1, 12))
         # Survey Responses
         add_section('SURVEY RESPONSES')
+        survey_table_data = [['Practice', 'Impact Level', 'Action Taken', 'Action Needed']]
+        found = False
         if surveys:
             for survey in surveys:
                 try:
@@ -716,11 +800,25 @@ def create_app():
                 for key in ['weekly_practice_1', 'monthly_practice_1', 'monthly_practice_2', 'quarterly_practice_1', 'quarterly_practice_2']:
                     practice = data.get(key)
                     if practice and isinstance(practice, dict):
-                        elements.append(Paragraph(f'Practice {key.replace("_", " ").title()}', normal))
-                        add_field('Impact Level', practice.get('impact', 'Not specified'))
-                        add_field('Action Taken', practice.get('action_taken', 'Not specified'))
-                        add_field('Action Needed', practice.get('action_needed', 'Not specified'))
-                        elements.append(Spacer(1, 4))
+                        found = True
+                        survey_table_data.append([
+                            key.replace('_', ' ').title(),
+                            practice.get('impact', 'Not specified'),
+                            practice.get('action_taken', 'Not specified'),
+                            practice.get('action_needed', 'Not specified'),
+                        ])
+        if found:
+            survey_table = Table(survey_table_data, colWidths=[120, 80, 140, 140])
+            survey_table.setStyle(TableStyle([
+                ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#eafaf3')),
+                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+                ('FONTSIZE', (0,0), (-1,-1), 11),
+                ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+                ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+                ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
+            ]))
+            elements.append(survey_table)
         else:
             elements.append(Paragraph('No survey responses found.', normal))
         doc.build(elements)
