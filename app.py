@@ -640,6 +640,11 @@ def create_app():
     @app.route('/download-user-report/<int:user_id>')
     @login_required
     def download_user_report(user_id):
+        """
+        Download a PDF report for a specific user.
+        - Only the user themselves or an admin can download.
+        - This route always returns a PDF, never Excel.
+        """
         # Only allow user to download their own report, or admin to download any
         if session.get('user_id') != user_id and not session.get('admin_logged_in'):
             flash('You are not authorized to download this report.', 'error')
