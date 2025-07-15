@@ -699,6 +699,7 @@ def create_app():
         - Only the user themselves or an admin can download.
         - This route always returns a PDF, never Excel.
         """
+        survey_data = {}  # Always define at the top to avoid UnboundLocalError
         if session.get('user_id') != user_id and not session.get('admin_logged_in'):
             flash('You are not authorized to download this report.', 'error')
             return redirect(url_for('user_dashboard'))
@@ -858,7 +859,6 @@ def create_app():
             ('quarterly_practice_2', 'Quarterly Practice 2', user.quarterly_practice_2),
         ]
         # Always initialize survey_data as empty dict
-        survey_data = {}
         latest_survey = surveys[-1] if surveys else None
         if latest_survey:
             try:
