@@ -168,16 +168,17 @@ def create_app():
     
     @app.route('/login', methods=['GET', 'POST'])
     def login():
+        def normalize(s):
+            return re.sub(r'\s+', ' ', s.strip().lower()) if s else ''
         if request.method == 'POST':
             name = request.form.get('name', '').strip()
             email = request.form.get('email', '').strip()
             if not name or not email:
                 flash('Please enter both name and email.', 'error')
                 return render_template('login.html')
-            user = HindalcoPledge.query.filter(
-                func.lower(HindalcoPledge.name) == func.lower(name),
-                func.lower(HindalcoPledge.email) == func.lower(email)
-            ).first()
+            # Fetch all users and compare normalized fields
+            users = HindalcoPledge.query.all()
+            user = next((u for u in users if normalize(u.name) == normalize(name) and normalize(u.email) == normalize(email)), None)
             if user:
                 session['user_id'] = user.id
                 session['user_name'] = user.name
