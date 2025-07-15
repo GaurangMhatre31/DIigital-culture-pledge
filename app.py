@@ -549,7 +549,7 @@ def create_app():
     @app.route('/export-data')
     @admin_required
     def export_data():
-        """Export all survey data to Excel (colorful, admin only)"""
+        """Export all survey data to Excel (colorful, admin only, with latest survey response and impact per practice/behavior)"""
         try:
             from openpyxl import Workbook
             from openpyxl.styles import Font, PatternFill, Alignment
@@ -559,33 +559,59 @@ def create_app():
             wb = Workbook()
             ws = wb.active
             ws.title = "Digital Culture Survey Responses"
-            # Headers (colorful, as in screenshot)
+            # Define columns for each section
             headers = [
-                'Sr', 'Name', 'Email', 'Telephone', 'Employee_ID', 'Designation', 'Problem Statement', 'Key Success Metric', 'Timeline',
-                'Weekly Practice 1', 'Monthly Practice 1', 'Monthly Practice 2', 'Quarterly Practice 1', 'Quarterly Practice 2',
-                'Custom Practice', 'Custom Frequency',
-                'START Behavior 1', 'START Behavior 2', 'REDUCE Behavior 1', 'REDUCE Behavior 2', 'STOP Behavior 1', 'STOP Behavior 2',
+                'Sr', 'Name', 'Email', 'Telephone', 'Employee_ID', 'Designation',
             ]
-            # Add up to 5 survey responses columns
-            for i in range(1, 6):
+            # Practice columns
+            practice_keys = [
+                ('Weekly Practice', 'weekly_practice_1'),
+                ('Monthly Practice 1', 'monthly_practice_1'),
+                ('Monthly Practice 2', 'monthly_practice_2'),
+                ('Quarterly Practice 1', 'quarterly_practice_1'),
+                ('Quarterly Practice 2', 'quarterly_practice_2'),
+                ('Custom Practice', 'custom_practice'),
+            ]
+            for label, key in practice_keys:
                 headers.extend([
-                    f'Survey Practice {i}', f'Survey Impact {i}', f'Survey Action Taken {i}', f'Survey Action Needed {i}'
+                    label, f'{label} Action Taken', f'{label} Action Needed', f'{label} Impact Level'
                 ])
+            # Behavior columns
+            behavior_keys = [
+                ('START Behavior 1', 'behavior_start_1'),
+                ('START Behavior 2', 'behavior_start_2'),
+                ('REDUCE Behavior 1', 'behavior_reduce_1'),
+                ('REDUCE Behavior 2', 'behavior_reduce_2'),
+                ('STOP Behavior 1', 'behavior_stop_1'),
+                ('STOP Behavior 2', 'behavior_stop_2'),
+            ]
+            for label, key in behavior_keys:
+                headers.extend([
+                    label, f'{label} Action Taken', f'{label} Action Needed', f'{label} Impact Level'
+                ])
+            # North Star
+            headers.extend(['Problem Statement', 'Key Success Metric', 'Timeline'])
+            # Meta
             headers.extend(['Survey Completed', 'Survey Date', 'Expert Comments Available', 'Last Updated'])
-            # Add headers with color
-            header_fill = PatternFill(start_color="B7DEE8", end_color="B7DEE8", fill_type="solid")
+            # Add headers with color fills for sections
+            section_colors = [
+                ('A', 'F', 'B7DEE8'), # Personal Info
+                ('G', 'R', 'D9EAD3'), # Practices
+                ('S', 'AD', 'F9CB9C'), # Behaviors
+                ('AE', 'AG', 'C9DAF8'), # North Star
+                ('AH', 'AK', 'EAD1DC'), # Meta
+            ]
             for col_num, header in enumerate(headers, 1):
                 cell = ws.cell(row=1, column=col_num, value=header)
                 cell.font = Font(bold=True, color="000000")
-                cell.fill = header_fill
-                cell.alignment = Alignment(horizontal="center", vertical="center")
+                # Color fill by section
+                for start, end, color in section_colors:
+                    if get_column_letter(col_num) >= start and get_column_letter(col_num) <= end:
+                        cell.fill = PatternFill(start_color=color, end_color=color, fill_type="solid")
+                cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
             # Add data
             participants = HindalcoPledge.query.all()
             for row_num, participant in enumerate(participants, 2):
-                has_survey = bool(participant.survey_responses)
-                survey_date = participant.survey_responses[-1].created_at.strftime('%Y-%m-%d') if participant.survey_responses else ''
-                expert_comments = 'Yes' if any(sr.expert_comments for sr in participant.survey_responses) else 'No'
-                last_updated = participant.survey_responses[-1].updated_at.strftime('%Y-%m-%d %H:%M:%S') if participant.survey_responses else ''
                 row_data = [
                     participant.sr_no,
                     participant.name,
@@ -593,51 +619,44 @@ def create_app():
                     participant.phone,
                     participant.employee_id,
                     participant.designation,
+                ]
+                # Helper to get latest survey response for a key
+                def get_latest_survey(key):
+                    latest = None
+                    impact = action_taken = action_needed = ''
+                    for survey in reversed(participant.survey_responses):
+                        try:
+                            data = json.loads(survey.response_data) if survey.response_data else {}
+                        except Exception:
+                            data = {}
+                        val = data.get(key)
+                        if val and isinstance(val, dict):
+                            impact = val.get('impact', '')
+                            action_taken = val.get('action_taken', '')
+                            action_needed = val.get('action_needed', '')
+                            break
+                    return action_taken, action_needed, impact
+                # Practices
+                for label, key in practice_keys:
+                    desc = getattr(participant, key, '')
+                    action_taken, action_needed, impact = get_latest_survey(key)
+                    row_data.extend([desc, action_taken, action_needed, impact])
+                # Behaviors (if survey responses exist for them, else blank)
+                for label, key in behavior_keys:
+                    desc = getattr(participant, key, '')
+                    action_taken, action_needed, impact = get_latest_survey(key)
+                    row_data.extend([desc, action_taken, action_needed, impact])
+                # North Star
+                row_data.extend([
                     participant.problem_statement,
                     participant.success_metric,
-                    participant.timeline,
-                    participant.weekly_practice_1,
-                    participant.monthly_practice_1,
-                    participant.monthly_practice_2,
-                    participant.quarterly_practice_1,
-                    participant.quarterly_practice_2,
-                    participant.custom_practice,
-                    participant.custom_frequency,
-                    participant.behavior_start_1,
-                    participant.behavior_start_2,
-                    participant.behavior_reduce_1,
-                    participant.behavior_reduce_2,
-                    participant.behavior_stop_1,
-                    participant.behavior_stop_2,
-                ]
-                # Add up to 5 survey responses
-                survey_cells = []
-                survey_count = 0
-                for survey in participant.survey_responses:
-                    if survey_count >= 5:
-                        break
-                    try:
-                        data = json.loads(survey.response_data) if survey.response_data else {}
-                    except Exception:
-                        data = {}
-                    for key in ['weekly_practice_1', 'monthly_practice_1', 'monthly_practice_2', 'quarterly_practice_1', 'quarterly_practice_2']:
-                        practice = data.get(key)
-                        if practice and isinstance(practice, dict):
-                            survey_cells.extend([
-                                key.replace('_', ' ').title(),
-                                practice.get('impact', 'Not specified'),
-                                practice.get('action_taken', 'Not specified'),
-                                practice.get('action_needed', 'Not specified'),
-                            ])
-                            survey_count += 1
-                            if survey_count >= 5:
-                                break
-                    if survey_count >= 5:
-                        break
-                # Pad if less than 5
-                while len(survey_cells) < 20:
-                    survey_cells.append('')
-                row_data.extend(survey_cells)
+                    participant.timeline
+                ])
+                # Meta
+                has_survey = bool(participant.survey_responses)
+                survey_date = participant.survey_responses[-1].created_at.strftime('%Y-%m-%d') if participant.survey_responses else ''
+                expert_comments = 'Yes' if any(sr.expert_comments for sr in participant.survey_responses) else 'No'
+                last_updated = participant.survey_responses[-1].updated_at.strftime('%Y-%m-%d %H:%M:%S') if participant.survey_responses else ''
                 row_data.extend([
                     'Yes' if has_survey else 'No',
                     survey_date,
@@ -656,7 +675,7 @@ def create_app():
                             max_length = len(str(cell.value))
                     except:
                         pass
-                adjusted_width = (max_length + 2)
+                adjusted_width = (max_length + 4)
                 ws.column_dimensions[column].width = adjusted_width
             # Save to memory
             output = io.BytesIO()
