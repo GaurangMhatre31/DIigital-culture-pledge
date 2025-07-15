@@ -617,9 +617,9 @@
                             <td>
                                 <div class="btn-group btn-group-sm">
                                     {% if participant.survey_responses|length > 0 %}
-                                    <button class="btn btn-outline-primary btn-sm" onclick="viewParticipantDetails({{ participant.user_id }})" title="View Details">
+                                    <!-- <button class="btn btn-outline-primary btn-sm" onclick="viewParticipantDetails({{ participant.user_id }})" title="View Details">
                                         <i class="fas fa-eye"></i>
-                                    </button>
+                                    </button> -->
                                     <a class="btn btn-outline-success btn-sm" href="{{ url_for('admin_download_report', user_id=participant.user_id) }}" title="Download Report">
                                         <i class="fas fa-download"></i>
                                     </a>
@@ -633,9 +633,9 @@
                                     <button class="btn btn-outline-warning btn-sm" onclick="addComments({{ participant.user_id }})" title="Add Expert Comments">
                                         <i class="fas fa-comment"></i>
                                     </button>
-                                    <button class="btn btn-outline-secondary btn-sm" onclick="editParticipant({{ participant.user_id }})" title="Edit Participant">
+                                    <!-- <button class="btn btn-outline-secondary btn-sm" onclick="editParticipant({{ participant.user_id }})" title="Edit Participant">
                                         <i class="fas fa-edit"></i>
-                                    </button>
+                                    </button> -->
                                 </div>
                             </td>
                         </tr>
