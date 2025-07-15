@@ -590,6 +590,11 @@ def create_app():
             flash('Error generating Excel export.', 'error')
             return redirect(url_for('admin_dashboard'))
     
+    @app.route('/download-report')
+    @login_required
+    def download_report():
+        return redirect(url_for('export_data'))
+    
     @app.route('/logout')
     def logout():
         session.clear()
