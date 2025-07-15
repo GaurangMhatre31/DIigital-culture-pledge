@@ -187,7 +187,51 @@ def create_app():
     def user_dashboard():
         user = HindalcoPledge.query.get_or_404(session['user_id'])
         surveys = SurveyResponse.query.filter_by(user_id=user.id).order_by(SurveyResponse.created_at.desc()).all()
-        
+        # Attach parsed data for template compatibility
+        for survey in surveys:
+            try:
+                parsed = json.loads(survey.response_data) if survey.response_data else {}
+                # Structure for template: .data.weekly_practices, .data.monthly_practices, etc.
+                data = {}
+                # Weekly
+                if 'weekly_practice_1' in parsed:
+                    data['weekly_practices'] = {'weekly_practice_1': parsed['weekly_practice_1']}
+                else:
+                    data['weekly_practices'] = {}
+                # Monthly
+                monthly = {}
+                for i in range(1, 3):
+                    key = f'monthly_practice_{i}'
+                    if key in parsed:
+                        monthly[key] = parsed[key]
+                data['monthly_practices'] = monthly
+                # Quarterly
+                quarterly = {}
+                for i in range(1, 3):
+                    key = f'quarterly_practice_{i}'
+                    if key in parsed:
+                        quarterly[key] = parsed[key]
+                data['quarterly_practices'] = quarterly
+                # Behaviors
+                start = {}
+                reduce = {}
+                stop = {}
+                for i in range(1, 3):
+                    k = f'behavior_start_{i}'
+                    if k in parsed:
+                        start[k] = parsed[k]
+                    k = f'behavior_reduce_{i}'
+                    if k in parsed:
+                        reduce[k] = parsed[k]
+                    k = f'behavior_stop_{i}'
+                    if k in parsed:
+                        stop[k] = parsed[k]
+                data['start_behaviors'] = start
+                data['reduce_behaviors'] = reduce
+                data['stop_behaviors'] = stop
+                survey.data = type('obj', (object,), data)()
+            except Exception as e:
+                survey.data = type('obj', (object,), {})()
         return render_template('user_dashboard.html', user=user, surveys=surveys, survey_responses=surveys)
     
     @app.route('/survey-form', methods=['GET', 'POST'])
