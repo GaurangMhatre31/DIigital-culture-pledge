@@ -565,8 +565,13 @@ def create_app():
                 'Weekly Practice 1', 'Monthly Practice 1', 'Monthly Practice 2', 'Quarterly Practice 1', 'Quarterly Practice 2',
                 'Custom Practice', 'Custom Frequency',
                 'START Behavior 1', 'START Behavior 2', 'REDUCE Behavior 1', 'REDUCE Behavior 2', 'STOP Behavior 1', 'STOP Behavior 2',
-                'Survey Completed', 'Survey Date', 'Expert Comments Available', 'Last Updated'
             ]
+            # Add up to 5 survey responses columns
+            for i in range(1, 6):
+                headers.extend([
+                    f'Survey Practice {i}', f'Survey Impact {i}', f'Survey Action Taken {i}', f'Survey Action Needed {i}'
+                ])
+            headers.extend(['Survey Completed', 'Survey Date', 'Expert Comments Available', 'Last Updated'])
             # Add headers with color
             header_fill = PatternFill(start_color="B7DEE8", end_color="B7DEE8", fill_type="solid")
             for col_num, header in enumerate(headers, 1):
@@ -604,11 +609,41 @@ def create_app():
                     participant.behavior_reduce_2,
                     participant.behavior_stop_1,
                     participant.behavior_stop_2,
+                ]
+                # Add up to 5 survey responses
+                survey_cells = []
+                survey_count = 0
+                for survey in participant.survey_responses:
+                    if survey_count >= 5:
+                        break
+                    try:
+                        data = json.loads(survey.response_data) if survey.response_data else {}
+                    except Exception:
+                        data = {}
+                    for key in ['weekly_practice_1', 'monthly_practice_1', 'monthly_practice_2', 'quarterly_practice_1', 'quarterly_practice_2']:
+                        practice = data.get(key)
+                        if practice and isinstance(practice, dict):
+                            survey_cells.extend([
+                                key.replace('_', ' ').title(),
+                                practice.get('impact', 'Not specified'),
+                                practice.get('action_taken', 'Not specified'),
+                                practice.get('action_needed', 'Not specified'),
+                            ])
+                            survey_count += 1
+                            if survey_count >= 5:
+                                break
+                    if survey_count >= 5:
+                        break
+                # Pad if less than 5
+                while len(survey_cells) < 20:
+                    survey_cells.append('')
+                row_data.extend(survey_cells)
+                row_data.extend([
                     'Yes' if has_survey else 'No',
                     survey_date,
                     expert_comments,
                     last_updated
-                ]
+                ])
                 for col_num, value in enumerate(row_data, 1):
                     ws.cell(row=row_num, column=col_num, value=value)
             # Auto-adjust column widths
@@ -683,6 +718,8 @@ def create_app():
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
             ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+            ('LEFTPADDING', (0,0), (-1,-1), 8),
+            ('RIGHTPADDING', (0,0), (-1,-1), 8),
         ]))
         elements.append(personal_table)
         elements.append(Spacer(1, 12))
@@ -701,6 +738,8 @@ def create_app():
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
             ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+            ('LEFTPADDING', (0,0), (-1,-1), 8),
+            ('RIGHTPADDING', (0,0), (-1,-1), 8),
         ]))
         elements.append(north_star_table)
         elements.append(Spacer(1, 12))
@@ -722,6 +761,8 @@ def create_app():
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
             ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
+            ('LEFTPADDING', (0,0), (-1,-1), 8),
+            ('RIGHTPADDING', (0,0), (-1,-1), 8),
         ]))
         elements.append(start_table)
         elements.append(Spacer(1, 8))
@@ -741,6 +782,8 @@ def create_app():
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
             ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#ffe5b4')),
+            ('LEFTPADDING', (0,0), (-1,-1), 8),
+            ('RIGHTPADDING', (0,0), (-1,-1), 8),
         ]))
         elements.append(reduce_table)
         elements.append(Spacer(1, 8))
@@ -760,6 +803,8 @@ def create_app():
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
             ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#f7b6b6')),
+            ('LEFTPADDING', (0,0), (-1,-1), 8),
+            ('RIGHTPADDING', (0,0), (-1,-1), 8),
         ]))
         elements.append(stop_table)
         elements.append(Spacer(1, 12))
@@ -784,6 +829,8 @@ def create_app():
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
             ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#dbe5f1')),
+            ('LEFTPADDING', (0,0), (-1,-1), 8),
+            ('RIGHTPADDING', (0,0), (-1,-1), 8),
         ]))
         elements.append(practice_table)
         elements.append(Spacer(1, 12))
@@ -817,6 +864,10 @@ def create_app():
                 ('ALIGN', (0,0), (-1,-1), 'LEFT'),
                 ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
                 ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
+                ('LEFTPADDING', (0,0), (-1,-1), 8),
+                ('RIGHTPADDING', (0,0), (-1,-1), 8),
+                ('TOPPADDING', (0,0), (-1,-1), 6),
+                ('BOTTOMPADDING', (0,0), (-1,-1), 6),
             ]))
             elements.append(survey_table)
         else:
