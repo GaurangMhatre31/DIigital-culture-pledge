@@ -13,7 +13,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import func
 from werkzeug.middleware.proxy_fix import ProxyFix
-import requests
+import pandas as pd
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -167,33 +168,17 @@ def create_app():
             if not name or not email:
                 flash('Please enter both name and email.', 'error')
                 return render_template('login.html')
-            # External API login
-            api_url = 'https://leading.ceei.me/hooks/login'
-            api_key = 'ceei_cS9kfGuEAEOyHsJ41voebpdVJw9N9JrMsnB4lvW5'
-            payload = {
-                'key': api_key,
-                'username': email,
-                'password': name
-            }
-            try:
-                api_resp = requests.post(api_url, data=payload, timeout=10)
-                api_json = api_resp.json()
-                if api_resp.status_code == 200 and api_json.get('success', False):
-                    user = HindalcoPledge.query.filter(
-                        func.lower(HindalcoPledge.name) == func.lower(name),
-                        func.lower(HindalcoPledge.email) == func.lower(email)
-                    ).first()
-                    if user:
-                        session['user_id'] = user.id
-                        session['user_name'] = user.name
-                        flash(f'Welcome back, {user.name}!', 'success')
-                        return redirect(url_for('user_dashboard'))
-                    else:
-                        flash('User not found in database. Please contact admin.', 'error')
-                else:
-                    flash('External login failed. Please check your credentials.', 'error')
-            except Exception as e:
-                flash(f'Login error: {e}', 'error')
+            user = HindalcoPledge.query.filter(
+                func.lower(HindalcoPledge.name) == func.lower(name),
+                func.lower(HindalcoPledge.email) == func.lower(email)
+            ).first()
+            if user:
+                session['user_id'] = user.id
+                session['user_name'] = user.name
+                flash(f'Welcome back, {user.name}!', 'success')
+                return redirect(url_for('user_dashboard'))
+            else:
+                flash('Invalid credentials. Please check your name and email.', 'error')
         return render_template('login.html')
     
     @app.route('/user-dashboard')
@@ -811,7 +796,83 @@ def initialize_database_with_participants(app):
                 return True
             
             # Use enhanced CSV loader
-            from enhanced_csv_loader import load_all_participants_from_csv
+            def clean_text(s):
+                if pd.isna(s):
+                    return ""
+                return re.sub(r'\s+', ' ', s).strip()
+
+            def clean_phone(s):
+                if pd.isna(s):
+                    return ""
+                # Remove all non-digit characters
+                return re.sub(r'\D', '', s)
+
+            def load_all_participants_from_csv():
+                """Load ALL participants with complete data from the new CSV file using header names."""
+                try:
+                    csv_file = 'All_36_Users_Complete_Data_20250715_121445.csv'
+                    df = pd.read_csv(csv_file)
+                    print(f"CSV loaded: {len(df)} rows, {len(df.columns)} columns")
+                    participants = []
+                    for index, row in df.iterrows():
+                        try:
+                            sr_no = clean_text(row.get('Sr', index+1))
+                            name = clean_text(row.get('Name'))
+                            email = clean_text(row.get('Email'))
+                            phone = clean_phone(row.get('Telephone'))
+                            employee_id = clean_text(row.get('Employee_ID', f"HIN{str(index+1).zfill(3)}"))
+                            designation = clean_text(row.get('Designation', 'Digital Transformation Specialist'))
+                            problem_statement = clean_text(row.get('Problem_Statement'))
+                            success_metric = clean_text(row.get('Key_Success_Metric'))
+                            timeline = clean_text(row.get('Timeline_to_Impact'))
+                            weekly_practice_1 = clean_text(row.get('Weekly_Practice_1'))
+                            monthly_practice_1 = clean_text(row.get('Monthly_Practice_1'))
+                            monthly_practice_2 = clean_text(row.get('Monthly_Practice_2'))
+                            quarterly_practice_1 = clean_text(row.get('Quarterly_Practice_1'))
+                            quarterly_practice_2 = clean_text(row.get('Quarterly_Practice_2'))
+                            custom_practice = clean_text(row.get('Custom_Practice'))
+                            custom_frequency = clean_text(row.get('Custom_Frequency'))
+                            behavior_start_1 = clean_text(row.get('Behavior_START_1'))
+                            behavior_start_2 = clean_text(row.get('Behavior_START_2'))
+                            behavior_reduce_1 = clean_text(row.get('Behavior_REDUCE_1'))
+                            behavior_reduce_2 = clean_text(row.get('Behavior_REDUCE_2'))
+                            behavior_stop_1 = clean_text(row.get('Behavior_STOP_1'))
+                            behavior_stop_2 = clean_text(row.get('Behavior_STOP_2'))
+                            participant_data = {
+                                'sr_no': sr_no,
+                                'name': name,
+                                'email': email,
+                                'phone': phone,
+                                'employee_id': employee_id,
+                                'designation': designation,
+                                'problem_statement': problem_statement,
+                                'success_metric': success_metric,
+                                'timeline': timeline,
+                                'weekly_practice_1': weekly_practice_1,
+                                'monthly_practice_1': monthly_practice_1,
+                                'monthly_practice_2': monthly_practice_2,
+                                'quarterly_practice_1': quarterly_practice_1,
+                                'quarterly_practice_2': quarterly_practice_2,
+                                'custom_practice': custom_practice,
+                                'custom_frequency': custom_frequency,
+                                'behavior_start_1': behavior_start_1,
+                                'behavior_start_2': behavior_start_2,
+                                'behavior_reduce_1': behavior_reduce_1,
+                                'behavior_reduce_2': behavior_reduce_2,
+                                'behavior_stop_1': behavior_stop_1,
+                                'behavior_stop_2': behavior_stop_2
+                            }
+                            if name and email:
+                                participants.append(participant_data)
+                                print(f"Loaded: {name} - {email}")
+                        except Exception as e:
+                            print(f"Error processing row {index}: {e}")
+                            continue
+                    print(f"\nTotal participants loaded: {len(participants)}")
+                    return participants
+                except Exception as e:
+                    print(f"Error loading CSV: {e}")
+                    return []
             
             # Load participants data
             participants_data = load_all_participants_from_csv()
