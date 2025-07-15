@@ -913,6 +913,17 @@ def create_app():
         flash('Admin logged out successfully.', 'info')
         return redirect(url_for('index'))
     
+    @app.route('/download-report')
+    @login_required
+    def download_report():
+        """
+        Redirects the logged-in user to their own PDF report download.
+        """
+        user_id = session.get('user_id')
+        if not user_id:
+            flash('You must be logged in to download your report.', 'error')
+            return redirect(url_for('login'))
+        return redirect(url_for('download_user_report', user_id=user_id))
 
     
     def get_detailed_impact_analysis():
