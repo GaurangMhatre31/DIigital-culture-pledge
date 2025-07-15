@@ -857,9 +857,9 @@ def create_app():
             ('quarterly_practice_1', 'Quarterly Practice 1', user.quarterly_practice_1),
             ('quarterly_practice_2', 'Quarterly Practice 2', user.quarterly_practice_2),
         ]
-        # Get latest survey for each practice
-        latest_survey = surveys[-1] if surveys else None
+        # Always initialize survey_data as empty dict
         survey_data = {}
+        latest_survey = surveys[-1] if surveys else None
         if latest_survey:
             try:
                 survey_data = json.loads(latest_survey.response_data) if latest_survey.response_data else {}
