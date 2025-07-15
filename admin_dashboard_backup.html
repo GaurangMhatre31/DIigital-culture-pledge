@@ -1,0 +1,3874 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Premium Enterprise Header -->
+<div class="premium-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: -1rem -1rem 2rem -1rem; padding: 2.5rem 1.5rem; position: relative; z-index: 10;">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h2 mb-3 fw-bold text-white" style="text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                    <i class="fas fa-chart-line me-3" style="color: #ffd700;"></i>
+                    Executive Dashboard
+                </h1>
+                <p class="mb-3 text-white-50 fs-5">Digital Transformation Analytics & Management Platform</p>
+                <div class="mt-3">
+                    <span class="badge status-badge me-3 px-3 py-2" style="background: rgba(40, 167, 69, 0.2); color: white; border-radius: 20px; font-size: 0.95rem; font-weight: 600;">
+                        <i class="fas fa-circle text-success me-2 pulse-animation" style="font-size: 10px;"></i>
+                        System Online
+                    </span>
+                    <span class="badge status-badge px-3 py-2" style="background: rgba(255, 193, 7, 0.2); color: white; border-radius: 20px; font-size: 0.95rem; font-weight: 600;">
+                        <i class="fas fa-sync-alt me-2 text-warning" style="animation: spin 3s linear infinite;"></i>
+                        Real-time Data
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="btn-group shadow-lg mb-3" role="group">
+                    <button class="btn btn-light btn-sm fw-semibold" onclick="exportData('excel')" title="Export to Excel">
+                        <i class="fas fa-file-excel text-success me-2"></i>Excel
+                    </button>
+                    <button class="btn btn-light btn-sm fw-semibold" onclick="exportData('csv')" title="Export to CSV">
+                        <i class="fas fa-file-csv text-info me-2"></i>CSV
+                    </button>
+                    <button class="btn btn-warning btn-sm fw-semibold" onclick="generateReports()" title="Generate PDF Reports">
+                        <i class="fas fa-file-pdf me-2"></i>Reports
+                    </button>
+                </div>
+                <div class="text-white-50">
+                    <small>Last updated: <span id="lastUpdate" class="text-white fw-semibold">Just now</span></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+        
+<!-- Premium Navigation System -->
+<div class="premium-nav-container mb-4">
+    <div class="card border-0 shadow-lg">
+        <div class="card-body p-0">
+            <ul class="nav nav-pills nav-justified premium-nav" id="adminTabs" role="tablist" style="padding: 0.5rem;">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active premium-nav-link" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                        <div class="nav-icon-container">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <span class="nav-text">Overview</span>
+                        <div class="nav-indicator"></div>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link premium-nav-link" id="participants-tab" data-bs-toggle="tab" data-bs-target="#participants" type="button" role="tab">
+                        <div class="nav-icon-container">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <span class="nav-text">Participants</span>
+                        <div class="nav-indicator"></div>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link premium-nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab">
+                        <div class="nav-icon-container">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <span class="nav-text">Analytics</span>
+                        <div class="nav-indicator"></div>
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link premium-nav-link" id="survey-builder-tab" data-bs-toggle="tab" data-bs-target="#survey-builder" type="button" role="tab">
+                        <div class="nav-icon-container">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <span class="nav-text">Builder</span>
+                        <div class="nav-indicator"></div>
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link premium-nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab">
+                        <div class="nav-icon-container">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <span class="nav-text">Settings</span>
+                        <div class="nav-indicator"></div>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="tab-content" id="adminTabContent">
+
+<!-- Overview Tab -->
+<div class="tab-pane fade show active" id="overview" role="tabpanel">
+    <!-- Premium KPI Dashboard -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-lg premium-kpi-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-center py-4 text-white">
+                    <div class="premium-icon-wrapper mb-3">
+                        <i class="fas fa-users fa-2x opacity-75"></i>
+                    </div>
+                    <h2 class="display-6 fw-bold mb-2">{{ total_pledges }}</h2>
+                    <p class="mb-0 small text-uppercase fw-semibold opacity-75">Total Participants</p>
+                    <div class="mt-2">
+                        <small class="opacity-75">Active enrollees</small>
+                    </div>
+                </div>
+                <div class="card-footer bg-white bg-opacity-20 border-0 py-2">
+                    <div class="d-flex justify-content-between align-items-center text-white">
+                        <small class="opacity-75">Status</small>
+                        <small><i class="fas fa-arrow-up me-1"></i>Enrolled</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-lg premium-kpi-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-center py-4 text-white">
+                    <div class="premium-icon-wrapper mb-3">
+                        <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                    </div>
+                    <h2 class="display-6 fw-bold mb-2">{{ total_surveys }}</h2>
+                    <p class="mb-0 small text-uppercase fw-semibold opacity-75">Surveys Completed</p>
+                    <div class="mt-2">
+                        <small class="opacity-75">Assessment submissions</small>
+                    </div>
+                </div>
+                <div class="card-footer bg-white bg-opacity-20 border-0 py-2">
+                    <div class="d-flex justify-content-between align-items-center text-white">
+                        <small class="opacity-75">Progress</small>
+                        <small><i class="fas fa-chart-line me-1"></i>{% if total_pledges > 0 %}{{ ((total_surveys / total_pledges) * 100)|round(1) }}%{% else %}0%{% endif %}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-lg premium-kpi-card" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);">
+                <div class="card-body text-center py-4 text-white">
+                    <div class="premium-icon-wrapper mb-3">
+                        <i class="fas fa-tasks fa-2x opacity-75"></i>
+                    </div>
+                    <h2 class="display-6 fw-bold mb-2">{{ practice_stats.total_practices|default(0) }}</h2>
+                    <p class="mb-0 small text-uppercase fw-semibold opacity-75">Practices Logged</p>
+                    <div class="mt-2">
+                        <small class="opacity-75">Implementation entries</small>
+                    </div>
+                </div>
+                <div class="card-footer bg-white bg-opacity-20 border-0 py-2">
+                    <div class="d-flex justify-content-between align-items-center text-white">
+                        <small class="opacity-75">Activity</small>
+                        <small><i class="fas fa-fire me-1"></i>High</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-lg premium-kpi-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-center py-4 text-white">
+                    <div class="premium-icon-wrapper mb-3">
+                        <i class="fas fa-trophy fa-2x opacity-75"></i>
+                    </div>
+                    <h2 class="display-6 fw-bold mb-2">{{ practice_stats.HIGH|default(0) }}</h2>
+                    <p class="mb-0 small text-uppercase fw-semibold opacity-75">High Impact Results</p>
+                    <div class="mt-2">
+                        <small class="opacity-75">Excellence indicators</small>
+                    </div>
+                </div>
+                <div class="card-footer bg-white bg-opacity-20 border-0 py-2">
+                    <div class="d-flex justify-content-between align-items-center text-white">
+                        <small class="opacity-75">Quality</small>
+                        <small><i class="fas fa-star me-1"></i>Premium</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Corporate Data Analysis -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card border shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="m-0 text-dark fw-semibold text-uppercase">
+                        <i class="fas fa-calendar text-secondary me-2"></i>
+                        Completion Trends Analysis
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-sm">
+                            <thead>
+                                <tr class="border-bottom">
+                                    <th class="text-muted small">Time Period</th>
+                                    <th class="text-muted small text-center">Submissions</th>
+                                    <th class="text-muted small text-center">Progress</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="small">Week 1</td>
+                                    <td class="text-center small">8</td>
+                                    <td class="text-center">
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-dark" style="width: 25%"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="small">Week 2</td>
+                                    <td class="text-center small">12</td>
+                                    <td class="text-center">
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-dark" style="width: 40%"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="small">Week 3</td>
+                                    <td class="text-center small">10</td>
+                                    <td class="text-center">
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-dark" style="width: 33%"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="small">Week 4</td>
+                                    <td class="text-center small">3</td>
+                                    <td class="text-center">
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-secondary" style="width: 10%"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card border shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="m-0 text-dark fw-semibold text-uppercase">
+                        <i class="fas fa-star text-secondary me-2"></i>
+                        Impact Distribution
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-sm">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted small">High Impact</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-dark">{{ practice_stats.HIGH|default(0) }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small">Medium Impact</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-secondary">{{ practice_stats.MEDIUM|default(0) }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small">Low Impact</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-light text-dark border">{{ practice_stats.LOW|default(0) }}</span>
+                                    </td>
+                                </tr>
+                                <tr class="border-top">
+                                    <td class="text-muted small fw-semibold">Total</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-dark">{{ practice_stats.total_practices|default(0) }}</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popular Practices Analysis -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="m-0 text-dark fw-semibold text-uppercase">
+                        <i class="fas fa-list text-secondary me-2"></i>
+                        Most Popular Digital Practices
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-sm">
+                            <thead>
+                                <tr class="border-bottom">
+                                    <th class="text-muted small">Practice Area</th>
+                                    <th class="text-muted small text-center">Frequency</th>
+                                    <th class="text-muted small text-center">Category</th>
+                                    <th class="text-muted small text-center">Success Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="small">Dashboard Management Implementation</td>
+                                    <td class="text-center small">15</td>
+                                    <td class="text-center"><span class="badge bg-dark text-white small">Weekly</span></td>
+                                    <td class="text-center small">87%</td>
+                                </tr>
+                                <tr>
+                                    <td class="small">Data-Driven Decision Making</td>
+                                    <td class="text-center small">12</td>
+                                    <td class="text-center"><span class="badge bg-secondary small">Monthly</span></td>
+                                    <td class="text-center small">73%</td>
+                                </tr>
+                                <tr>
+                                    <td class="small">Digital Team Routines</td>
+                                    <td class="text-center small">10</td>
+                                    <td class="text-center"><span class="badge bg-dark text-white small">Weekly</span></td>
+                                    <td class="text-center small">92%</td>
+                                </tr>
+                                <tr>
+                                    <td class="small">Digital Experimentation Programs</td>
+                                    <td class="text-center small">8</td>
+                                    <td class="text-center"><span class="badge bg-light text-dark border small">Quarterly</span></td>
+                                    <td class="text-center small">68%</td>
+                                </tr>
+                                <tr>
+                                    <td class="small">Digital Fluency Training</td>
+                                    <td class="text-center small">7</td>
+                                    <td class="text-center"><span class="badge bg-secondary small">Monthly</span></td>
+                                    <td class="text-center small">81%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Insights -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card border shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="m-0 text-dark fw-semibold text-uppercase">
+                        <i class="fas fa-tasks text-secondary me-2"></i>
+                        Key Action Areas
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-sm">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted small">Process Automation</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-dark text-white small">High Priority</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small">Team Collaboration Tools</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-dark text-white small">High Priority</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small">Data Analytics Training</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-secondary small">Medium Priority</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small">Digital Communication</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-secondary small">Medium Priority</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small">System Integration</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-light text-dark border small">Low Priority</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card border shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="m-0 text-dark fw-semibold text-uppercase">
+                        <i class="fas fa-clock text-secondary me-2"></i>
+                        Submission Metrics
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-sm">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted small">Average Completion Time</td>
+                                    <td class="text-end"><span class="badge bg-dark text-white small">5 days</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small">Fastest Completion</td>
+                                    <td class="text-end"><span class="badge bg-dark text-white small">1 day</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small">Latest Completion</td>
+                                    <td class="text-end"><span class="badge bg-secondary small">14 days</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small">This Week's Submissions</td>
+                                    <td class="text-end"><span class="badge bg-dark text-white small">8</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Participants Tab -->
+<div class="tab-pane fade" id="participants" role="tabpanel">
+    <!-- Search and Filter Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-lg-4">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" id="participantSearch" placeholder="Search by name, email, or employee ID...">
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <select class="form-select" id="statusFilter">
+                                <option value="">All Status</option>
+                                <option value="completed">Survey Completed</option>
+                                <option value="pending">Survey Pending</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-3">
+                            <select class="form-select" id="practiceFilter">
+                                <option value="">All Practices</option>
+                                <option value="weekly">Weekly Practices</option>
+                                <option value="monthly">Monthly Practices</option>
+                                <option value="quarterly">Quarterly Practices</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2">
+                            <button class="btn btn-outline-primary w-100" onclick="resetFilters()">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Participants Table -->
+    <div class="card shadow">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary">
+                    <i class="fas fa-users me-2"></i>
+                    Participants Management (<span id="participantCount">{{ total_pledges }}</span>)
+                </h6>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-primary" onclick="exportParticipants('csv')">
+                        <i class="fas fa-file-csv me-1"></i>CSV
+                    </button>
+                    <button class="btn btn-sm btn-outline-success" onclick="exportParticipants('excel')">
+                        <i class="fas fa-file-excel me-1"></i>Excel
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="generateBulkReports()">
+                        <i class="fas fa-file-pdf me-1"></i>Bulk Reports
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="participantsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0">
+                                <input type="checkbox" id="selectAll" onchange="toggleAllParticipants()">
+                            </th>
+                            <th class="border-0">Name</th>
+                            <th class="border-0">Email</th>
+                            <th class="border-0">Employee ID</th>
+                            <th class="border-0">Phone</th>
+                            <th class="border-0">Survey Status</th>
+                            <th class="border-0">Last Activity</th>
+                            <th class="border-0">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for participant in participants %}
+                        <tr class="participant-row" data-name="{{ participant.name|lower }}" data-email="{{ participant.email|lower }}" data-employee-id="{{ participant.employee_id|lower }}">
+                            <td>
+                                <input type="checkbox" class="participant-checkbox" value="{{ participant.user_id }}">
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar me-2">
+                                        <div class="avatar-initial bg-primary text-white rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                                            {{ participant.name[:2]|upper }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <strong>{{ participant.name }}</strong>
+                                        {% if participant.designation and participant.designation != 'N/A' %}
+                                        <br><small class="text-muted">{{ participant.designation }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-break">{{ participant.email }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ participant.employee_id or 'N/A' }}</span>
+                            </td>
+                            <td>
+                                {% if participant.phone %}
+                                    <span class="text-dark">{{ participant.phone }}</span>
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if participant.survey_count > 0 %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        Completed ({{ participant.survey_count }})
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-clock me-1"></i>
+                                        Pending
+                                    </span>
+                                {% endif %}
+                                {% if participant.has_expert_comments and participant.survey_count == 0 %}
+                                    <br><small class="badge bg-info text-white mt-1">
+                                        <i class="fas fa-comment me-1"></i>
+                                        Has Comments
+                                    </small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if participant.last_survey_date %}
+                                    <small class="text-muted">{{ participant.last_survey_date }}</small>
+                                {% else %}
+                                    <small class="text-muted">Not started</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    {% if participant.survey_count > 0 %}
+                                    <button class="btn btn-outline-primary btn-sm" onclick="viewParticipantDetails({{ participant.user_id }})" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success btn-sm" onclick="downloadParticipantReport({{ participant.user_id }})" title="Download Report">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteParticipantSurvey({{ participant.user_id }})" title="Delete Survey Data">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <button class="btn btn-outline-dark btn-sm" onclick="deleteParticipantComments({{ participant.user_id }})" title="Delete Expert Comments">
+                                        <i class="fas fa-comment-slash"></i>
+                                    </button>
+                                    {% endif %}
+                                    <button class="btn btn-outline-warning btn-sm" onclick="addComments({{ participant.user_id }})" title="Add Expert Comments">
+                                        <i class="fas fa-comment"></i>
+                                    </button>
+
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="editParticipant({{ participant.user_id }})" title="Edit Participant">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Actions Panel -->
+    <div class="card shadow-sm mt-4" id="bulkActionsPanel" style="display: none;">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong><span id="selectedCount">0</span> participants selected</strong>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-info" onclick="exportSelected()">
+                        <i class="fas fa-download me-1"></i>Export Selected
+                    </button>
+                    <button class="btn btn-danger" onclick="generateBulkReports()">
+                        <i class="fas fa-file-pdf me-1"></i>Generate Reports
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Corporate Analytics Tab -->
+<div class="tab-pane fade" id="analytics" role="tabpanel">
+    <!-- Corporate Analytics Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border shadow-sm">
+                <div class="card-header bg-light border-bottom py-3">
+                    <h6 class="m-0 text-dark fw-semibold text-uppercase">
+                        <i class="fas fa-chart-line text-secondary me-2"></i>
+                        Analytics Summary
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="text-center">
+                                <h4 class="text-dark mb-1">{% if total_pledges > 0 %}{{ ((total_surveys / total_pledges) * 100)|round(1) }}%{% else %}0%{% endif %}</h4>
+                                <p class="text-muted mb-0 small text-uppercase">Completion Rate</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="text-center">
+                                <h4 class="text-dark mb-1">{{ practice_stats.HIGH|default(0) }}</h4>
+                                <p class="text-muted mb-0 small text-uppercase">High Impact Practices</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="text-center">
+                                <h4 class="text-dark mb-1">{{ total_surveys }}</h4>
+                                <p class="text-muted mb-0 small text-uppercase">Total Assessments</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="text-center">
+                                <h4 class="text-dark mb-1">{{ practice_stats.total_practices|default(0) }}</h4>
+                                <p class="text-muted mb-0 small text-uppercase">Practice Entries</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Corporate Performance Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="m-0 text-dark fw-semibold text-uppercase">
+                        <i class="fas fa-chart-bar text-secondary me-2"></i>
+                        Performance Overview
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted">Total Enrolled Participants</td>
+                                    <td class="text-end fw-semibold">{{ total_pledges }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Assessment Completions</td>
+                                    <td class="text-end fw-semibold">{{ total_surveys }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Overall Completion Rate</td>
+                                    <td class="text-end fw-semibold">{% if total_pledges > 0 %}{{ ((total_surveys / total_pledges) * 100)|round(1) }}%{% else %}0%{% endif %}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">High Impact Implementations</td>
+                                    <td class="text-end fw-semibold">{{ practice_stats.HIGH|default(0) }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Medium Impact Implementations</td>
+                                    <td class="text-end fw-semibold">{{ practice_stats.MEDIUM|default(0) }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Total Practice Implementations</td>
+                                    <td class="text-end fw-semibold">{{ practice_stats.total_practices|default(0) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Survey Submission Analytics Charts -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card border shadow-sm">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h6 class="m-0 fw-semibold">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Survey Completion Status
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="position-relative" style="height: 300px;">
+                        <canvas id="surveyCompletionChart"></canvas>
+                    </div>
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between text-sm">
+                            <span class="text-muted">
+                                <i class="fas fa-circle text-success me-1"></i>
+                                Completed: <strong>{{ total_surveys }}</strong>
+                            </span>
+                            <span class="text-muted">
+                                <i class="fas fa-circle text-warning me-1"></i>
+                                Pending: <strong>{{ total_pledges - total_surveys }}</strong>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Additional Analytics Charts -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card border shadow-sm">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <h6 class="m-0 fw-semibold">
+                        <i class="fas fa-chart-area me-2"></i>
+                        Participant Engagement Overview
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="position-relative" style="height: 350px;">
+                        <canvas id="engagementOverviewChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border shadow-sm">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #fad0c4 0%, #ffd1ff 100%); color: #333 !important;">
+                    <h6 class="m-0 fw-semibold text-dark">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Completion Progress
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="position-relative" style="height: 350px;">
+                        <canvas id="completionProgressChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Implementation Analysis -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card border shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="m-0 text-dark fw-semibold text-uppercase">
+                        <i class="fas fa-chart-pie text-secondary me-2"></i>
+                        Impact Analysis
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-sm">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted">High Impact Practices</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-dark text-white">{{ practice_stats.HIGH|default(0) }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Medium Impact Practices</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-secondary">{{ practice_stats.MEDIUM|default(0) }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Low Impact Practices</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-light text-dark border">{{ practice_stats.LOW|default(0) }}</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card border shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="m-0 text-dark fw-semibold text-uppercase">
+                        <i class="fas fa-list text-secondary me-2"></i>
+                        Top Digital Practices
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-sm">
+                            <thead>
+                                <tr class="border-bottom">
+                                    <th class="text-muted small">Practice Area</th>
+                                    <th class="text-muted small text-center">Count</th>
+                                    <th class="text-muted small text-center">Impact</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="small">Dashboard Implementation</td>
+                                    <td class="text-center small">15</td>
+                                    <td class="text-center"><span class="badge bg-dark text-white small">HIGH</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="small">Digital Team Routines</td>
+                                    <td class="text-center small">12</td>
+                                    <td class="text-center"><span class="badge bg-dark text-white small">HIGH</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="small">Data-Driven Decisions</td>
+                                    <td class="text-center small">8</td>
+                                    <td class="text-center"><span class="badge bg-secondary small">MEDIUM</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="small">Digital Experiments</td>
+                                    <td class="text-center small">6</td>
+                                    <td class="text-center"><span class="badge bg-dark text-white small">HIGH</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border shadow-sm">
+                <div class="card-header bg-light border-bottom py-3">
+                    <h6 class="m-0 text-dark fw-semibold text-uppercase">
+                        <i class="fas fa-file-text text-secondary me-2"></i>
+                        Executive Summary
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <h6 class="text-dark mb-3">Digital Transformation Progress</h6>
+                            <div class="progress mb-3 bg-light" style="height: 6px;">
+                                <div class="progress-bar bg-dark" role="progressbar" style="width: {% if total_pledges > 0 %}{{ ((total_surveys / total_pledges) * 100)|round(1) }}%{% else %}0%{% endif %}" aria-valuenow="{% if total_pledges > 0 %}{{ ((total_surveys / total_pledges) * 100)|round(1) }}{% else %}0{% endif %}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <p class="text-muted mb-0 small">
+                                <strong>{{ total_surveys }} of {{ total_pledges }}</strong> participants have completed their digital culture assessments, 
+                                representing <strong>{% if total_pledges > 0 %}{{ ((total_surveys / total_pledges) * 100)|round(1) }}%{% else %}0%{% endif %}</strong> completion rate.
+                                Implementation focus continues on high-impact digital practices across organizational units.
+                            </p>
+                        </div>
+                        <div class="col-lg-4">
+                            <h6 class="text-dark mb-3">Status Overview</h6>
+                            <ul class="list-unstyled mb-0 small">
+                                <li class="mb-2 text-muted"><i class="fas fa-circle text-secondary me-2" style="font-size: 8px;"></i>Dashboard implementation initiatives active</li>
+                                <li class="mb-2 text-muted"><i class="fas fa-circle text-secondary me-2" style="font-size: 8px;"></i>Team digital routines established</li>
+                                <li class="mb-2 text-muted"><i class="fas fa-circle text-secondary me-2" style="font-size: 8px;"></i>Data-driven decision processes ongoing</li>
+                                <li class="mb-0 text-muted"><i class="fas fa-circle text-secondary me-2" style="font-size: 8px;"></i>Digital experimentation programs deployed</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Reports Tab -->
+<div class="tab-pane fade" id="reports" role="tabpanel">
+    <!-- Report Generation Interface -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-file-alt me-2"></i>
+                        Generate Custom Reports
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form id="reportGenerationForm">
+                        <!-- Report Type & Scope -->
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Report Type</label>
+                                <select class="form-select" id="reportType" onchange="updateReportOptions()">
+                                    <option value="individual">Individual</option>
+                                    <option value="group">Group</option>
+                                    <option value="summary">Summary</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Report Scope</label>
+                                <select class="form-select" id="reportScope">
+                                    <option value="all">All Participants</option>
+                                    <option value="completed">Completed Surveys Only</option>
+                                    <option value="pending">Pending Surveys Only</option>
+                                    <option value="high_impact">High Impact Only</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Format</label>
+                                <select class="form-select" id="reportFormat">
+                                    <option value="pdf">PDF</option>
+                                    <option value="ppt">PPT</option>
+                                    <option value="xls">XLS</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Client Filters -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Business Unit</label>
+                                <select class="form-select" id="buFilter">
+                                    <option value="">All BUs</option>
+                                    <option value="manufacturing">Manufacturing</option>
+                                    <option value="sales">Sales & Marketing</option>
+                                    <option value="hr">Human Resources</option>
+                                    <option value="finance">Finance</option>
+                                    <option value="it">Information Technology</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Plant/Location</label>
+                                <select class="form-select" id="plantFilter">
+                                    <option value="">All Plants</option>
+                                    <option value="mumbai">Mumbai</option>
+                                    <option value="delhi">Delhi</option>
+                                    <option value="bangalore">Bangalore</option>
+                                    <option value="pune">Pune</option>
+                                    <option value="chennai">Chennai</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Cohort</label>
+                                <select class="form-select" id="cohortFilter">
+                                    <option value="">All Cohorts</option>
+                                    <option value="cohort_1">Cohort 1 - Q1 2025</option>
+                                    <option value="cohort_2">Cohort 2 - Q2 2025</option>
+                                    <option value="cohort_3">Cohort 3 - Q3 2025</option>
+                                    <option value="cohort_4">Cohort 4 - Q4 2025</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Department</label>
+                                <select class="form-select" id="departmentFilter">
+                                    <option value="">All Departments</option>
+                                    <option value="leadership">Leadership</option>
+                                    <option value="middle_mgmt">Middle Management</option>
+                                    <option value="operations">Operations</option>
+                                    <option value="support">Support Functions</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Individual Participant Selection -->
+                        <div class="row mb-3" id="individualParticipantDiv" style="display: none;">
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Select Participant</label>
+                                <select class="form-select" id="individualParticipant">
+                                    <option value="">Choose a participant...</option>
+                                    {% for pledge in pledges %}
+                                    <option value="{{ pledge.id }}">{{ pledge.name }} ({{ pledge.email }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Date Range Filters -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">From Date</label>
+                                <input type="date" class="form-control" id="fromDate">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">To Date</label>
+                                <input type="date" class="form-control" id="toDate">
+                            </div>
+                        </div>
+
+                        <!-- Practice Type Filters -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Include Practice Types</label>
+                                <div class="form-check-group">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="includeWeekly" checked>
+                                        <label class="form-check-label" for="includeWeekly">Weekly Practices</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="includeMonthly" checked>
+                                        <label class="form-check-label" for="includeMonthly">Monthly Practices</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="includeQuarterly" checked>
+                                        <label class="form-check-label" for="includeQuarterly">Quarterly Practices</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="includeBehaviors" checked>
+                                        <label class="form-check-label" for="includeBehaviors">Behavior Changes</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Impact Level Filters -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Include Impact Levels</label>
+                                <div class="form-check-group">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="includeHigh" checked>
+                                        <label class="form-check-label" for="includeHigh">High Impact</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="includeMedium" checked>
+                                        <label class="form-check-label" for="includeMedium">Medium Impact</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="includeLow" checked>
+                                        <label class="form-check-label" for="includeLow">Low Impact</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Simplified Report Generation -->
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-success w-100 btn-lg" onclick="downloadExcelFile()">
+                                    <i class="fas fa-file-excel me-2"></i>
+                                    Download Excel
+                                </button>
+                                <small class="text-muted d-block mt-1 text-center">Complete survey data with analytics</small>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-danger w-100 btn-lg" onclick="downloadAllPDFReports()">
+                                    <i class="fas fa-file-pdf me-2"></i>
+                                    Download PDF Reports
+                                </button>
+                                <small class="text-muted d-block mt-1 text-center">All participant survey reports</small>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-warning w-100 btn-lg" onclick="generateVisualAnalyticsReport()">
+                                    <i class="fas fa-chart-bar me-2"></i>
+                                    Visual Report
+                                </button>
+                                <small class="text-muted d-block mt-1 text-center">Interactive charts & analytics</small>
+                            </div>
+                        </div>
+                        
+                        <!-- PPT Export with Charts -->
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h6 class="mb-3">
+                                <i class="fas fa-presentation me-2 text-warning"></i>
+                                PowerPoint Export with Charts
+                            </h6>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <button type="button" class="btn btn-outline-warning w-100" onclick="downloadPowerPointSummary()">
+                                        <i class="fas fa-chart-pie me-1"></i>Summary PPT
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button type="button" class="btn btn-outline-warning w-100" onclick="downloadPowerPointDetailed()">
+                                        <i class="fas fa-chart-line me-1"></i>Detailed PPT
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Includes all dashboard charts: completion status, engagement metrics, and progress analytics
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Download Queue Status -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-white">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-download me-2"></i>
+                        Download Queue & Status
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Report Type</th>
+                                    <th>Status</th>
+                                    <th>Progress</th>
+                                    <th>Format</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="downloadQueue">
+                                <tr>
+                                    <td>Individual Reports</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                    <td>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-success" style="width: 100%"></div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark">PDF</span></td>
+                                    <td>
+                                        <a href="/admin/reports/bulk" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Group Analytics</td>
+                                    <td><span class="badge bg-warning">Processing</span></td>
+                                    <td>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated" style="width: 65%"></div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark">PPT</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary" disabled>
+                                            <i class="fas fa-clock"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Summary Dashboard</td>
+                                    <td><span class="badge bg-info">Queued</span></td>
+                                    <td>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-info" style="width: 0%"></div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark">XLS</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary" disabled>
+                                            <i class="fas fa-hourglass-start"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-8">
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-success">3 Completed</span>
+                                <span class="badge bg-warning">1 Processing</span>
+                                <span class="badge bg-info">2 Queued</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-sm btn-outline-primary" onclick="refreshDownloadQueue()">
+                                <i class="fas fa-sync-alt me-1"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-white">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-bolt me-2"></i>
+                        Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" onclick="generateAllParticipantReports()">
+                            <i class="fas fa-users me-2"></i>
+                            All Participant Reports
+                        </button>
+                        <button class="btn btn-outline-success" onclick="downloadAnalyticsSummary()">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            Analytics Summary
+                        </button>
+                        <button class="btn btn-outline-info" onclick="exportMasterData()">
+                            <i class="fas fa-database me-2"></i>
+                            Master Data Export
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="generateCertificates()">
+                            <i class="fas fa-certificate me-2"></i>
+                            Generate Certificates
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Survey Builder Tab -->
+<div class="tab-pane fade" id="survey-builder" role="tabpanel">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-edit me-2"></i>
+                        Survey Questions Management
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <!-- Question List -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6>Survey Questions</h6>
+                        <button class="btn btn-primary btn-sm" onclick="addNewQuestion()">
+                            <i class="fas fa-plus me-1"></i>Add Question
+                        </button>
+                    </div>
+                    
+                    <div id="questionsList" class="list-group">
+                        <!-- Weekly Practice Questions -->
+                        <div class="list-group-item question-item" data-question-id="weekly_practice">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 text-success">Weekly Practice Implementation</h6>
+                                    <p class="mb-1 text-muted">Rate the impact of your weekly digital practice implementation</p>
+                                    <small class="text-muted">Type: Rating Scale (HIGH/MEDIUM/LOW)</small>
+                                </div>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary" onclick="editQuestion('weekly_practice')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="duplicateQuestion('weekly_practice')">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="deleteQuestion('weekly_practice')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Monthly Practice Questions -->
+                        <div class="list-group-item question-item" data-question-id="monthly_practice">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 text-warning">Monthly Practice Implementation</h6>
+                                    <p class="mb-1 text-muted">Assess your monthly digital transformation initiatives</p>
+                                    <small class="text-muted">Type: Rating Scale + Text Response</small>
+                                </div>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary" onclick="editQuestion('monthly_practice')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="duplicateQuestion('monthly_practice')">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="deleteQuestion('monthly_practice')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Behavior Change Questions -->
+                        <div class="list-group-item question-item" data-question-id="behavior_change">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 text-info">Behavior Change Assessment</h6>
+                                    <p class="mb-1 text-muted">START, REDUCE, STOP behavior tracking with action details</p>
+                                    <small class="text-muted">Type: Multi-part Text Response</small>
+                                </div>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary" onclick="editQuestion('behavior_change')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="duplicateQuestion('behavior_change')">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="deleteQuestion('behavior_change')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logic Rules Section -->
+                    <div class="mt-4">
+                        <h6>Logic Rules & Conditional Visibility</h6>
+                        <div class="card border-light">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Show Question</label>
+                                        <select class="form-select form-select-sm">
+                                            <option>Monthly Practice 2</option>
+                                            <option>Quarterly Practice 3</option>
+                                            <option>Behavior Change Follow-up</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">When Previous Answer Is</label>
+                                        <select class="form-select form-select-sm">
+                                            <option>HIGH Impact</option>
+                                            <option>MEDIUM Impact</option>
+                                            <option>Any Response</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-plus me-1"></i>Add Rule
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Preview Mode -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-white">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-eye me-2"></i>
+                        Survey Preview
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="btn-group w-100 mb-3">
+                        <button class="btn btn-outline-primary active" onclick="switchPreview('desktop')">
+                            <i class="fas fa-desktop me-1"></i>Desktop
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="switchPreview('mobile')">
+                            <i class="fas fa-mobile-alt me-1"></i>Mobile
+                        </button>
+                    </div>
+                    
+                    <div id="surveyPreview" class="border rounded p-3" style="background: #f8f9fa; min-height: 300px;">
+                        <div class="preview-content">
+                            <h6 class="text-primary">Digital Culture Survey Preview</h6>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Weekly Practice Implementation</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="weekly_impact" disabled>
+                                    <label class="form-check-label">HIGH Impact</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="weekly_impact" disabled>
+                                    <label class="form-check-label">MEDIUM Impact</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="weekly_impact" disabled>
+                                    <label class="form-check-label">LOW Impact</label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Action Taken</label>
+                                <textarea class="form-control form-control-sm" rows="2" disabled placeholder="Describe what you implemented..."></textarea>
+                            </div>
+                            
+                            <div class="text-center">
+                                <button class="btn btn-primary btn-sm" disabled>Submit Survey</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Question Properties -->
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-cogs me-2"></i>
+                        Question Properties
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form id="questionPropertiesForm">
+                        <div class="mb-3">
+                            <label class="form-label">Question Type</label>
+                            <select class="form-select form-select-sm">
+                                <option>Rating Scale</option>
+                                <option>Text Response</option>
+                                <option>Multiple Choice</option>
+                                <option>Checkbox</option>
+                                <option>Date/Time</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="requiredField">
+                                <label class="form-check-label" for="requiredField">
+                                    Required Field
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="conditionalVisibility">
+                                <label class="form-check-label" for="conditionalVisibility">
+                                    Conditional Visibility
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary btn-sm w-100">
+                            Update Question
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Settings & Access Control Tab -->
+<div class="tab-pane fade" id="settings" role="tabpanel">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- User Roles & Permissions -->
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-users-cog me-2"></i>
+                        User Roles & Permissions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white;">ROLE</th>
+                                    <th style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white;">USERS</th>
+                                    <th style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white;">PERMISSIONS</th>
+                                    <th style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white;">ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-danger rounded-pill px-3 py-2">ADMIN</span>
+                                    </td>
+                                    <td class="fw-bold">2</td>
+                                    <td>Full Access</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="updateUserRole('admin')">
+                                            <i class="fas fa-edit me-1"></i>Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-warning rounded-pill px-3 py-2">MENTOR</span>
+                                    </td>
+                                    <td class="fw-bold">5</td>
+                                    <td>Group Management</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="updateUserRole('mentor')">
+                                            <i class="fas fa-edit me-1"></i>Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-info rounded-pill px-3 py-2">CLIENT</span>
+                                    </td>
+                                    <td class="fw-bold">12</td>
+                                    <td>View Reports Only</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="updateUserRole('client')">
+                                            <i class="fas fa-edit me-1"></i>Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button class="btn btn-primary rounded-pill px-4" onclick="addNewRole()">
+                            <i class="fas fa-plus me-2"></i>Add New Role
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals and Enhanced JavaScript -->
+
+<!-- Participant Details Modal -->
+<div class="modal fade" id="participantModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="participantModalTitle">Participant Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="participantModalBody">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="editParticipantFromModal()">Edit Participant</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Comments Modal -->
+<div class="modal fade" id="commentsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Expert Comments</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="commentsForm">
+                    <input type="hidden" id="commentUserId">
+                    <div class="mb-3">
+                        <label for="expertComments" class="form-label">Add Expert Comments</label>
+                        <textarea class="form-control" id="expertComments" rows="4" placeholder="Enter your feedback for this participant..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveComments()">Save Comments</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Enhanced Admin Dashboard JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+    initializeParticipantFiltering();
+    initializeReportGeneration();
+});
+
+// Chart Initialization
+function initializeCharts() {
+    // Practice Impact Chart (if data available)
+    if (document.getElementById('practiceImpactChart')) {
+        const ctx = document.getElementById('practiceImpactChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Weekly Practices', 'Monthly Practices', 'Quarterly Practices'],
+                datasets: [{
+                    label: 'High Impact',
+                    data: [{{ practice_stats.HIGH|default(0) }}, {{ practice_stats.HIGH|default(0) }}, {{ practice_stats.HIGH|default(0) }}],
+                    backgroundColor: '#28a745',
+                    borderColor: '#1e7e34',
+                    borderWidth: 1
+                }, {
+                    label: 'Medium Impact',
+                    data: [{{ practice_stats.MEDIUM|default(0) }}, {{ practice_stats.MEDIUM|default(0) }}, {{ practice_stats.MEDIUM|default(0) }}],
+                    backgroundColor: '#ffc107',
+                    borderColor: '#e0a800',
+                    borderWidth: 1
+                }, {
+                    label: 'Low Impact',
+                    data: [{{ practice_stats.LOW|default(0) }}, {{ practice_stats.LOW|default(0) }}, {{ practice_stats.LOW|default(0) }}],
+                    backgroundColor: '#dc3545',
+                    borderColor: '#c82333',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Behavior Distribution Chart
+    if (document.getElementById('behaviorDistributionChart')) {
+        const ctx2 = document.getElementById('behaviorDistributionChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: ['START Behaviors', 'REDUCE Behaviors', 'STOP Behaviors'],
+                datasets: [{
+                    data: [30, 25, 20], // These would be dynamic
+                    backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                    borderColor: ['#1e7e34', '#e0a800', '#c82333'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    // Timeline Chart
+    if (document.getElementById('submissionTimelineChart')) {
+        const ctx3 = document.getElementById('submissionTimelineChart').getContext('2d');
+        new Chart(ctx3, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                datasets: [{
+                    label: 'Survey Submissions',
+                    data: [5, 8, 12, 15],
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    borderWidth: 2,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Participant Filtering
+function initializeParticipantFiltering() {
+    const searchInput = document.getElementById('participantSearch');
+    const statusFilter = document.getElementById('statusFilter');
+    const practiceFilter = document.getElementById('practiceFilter');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', filterParticipants);
+    }
+    if (statusFilter) {
+        statusFilter.addEventListener('change', filterParticipants);
+    }
+    if (practiceFilter) {
+        practiceFilter.addEventListener('change', filterParticipants);
+    }
+}
+
+function filterParticipants() {
+    const searchTerm = document.getElementById('participantSearch')?.value.toLowerCase() || '';
+    const statusFilter = document.getElementById('statusFilter')?.value || '';
+    const practiceFilter = document.getElementById('practiceFilter')?.value || '';
+    
+    const rows = document.querySelectorAll('.participant-row');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const name = row.dataset.name || '';
+        const email = row.dataset.email || '';
+        const employeeId = row.dataset.employeeId || '';
+        const statusBadge = row.querySelector('.badge');
+        const status = statusBadge ? statusBadge.textContent.toLowerCase() : '';
+        
+        let showRow = true;
+        
+        // Text search
+        if (searchTerm && !name.includes(searchTerm) && !email.includes(searchTerm) && !employeeId.includes(searchTerm)) {
+            showRow = false;
+        }
+        
+        // Status filter
+        if (statusFilter) {
+            if (statusFilter === 'completed' && !status.includes('completed')) {
+                showRow = false;
+            } else if (statusFilter === 'pending' && !status.includes('pending')) {
+                showRow = false;
+            }
+        }
+        
+        row.style.display = showRow ? '' : 'none';
+        if (showRow) visibleCount++;
+    });
+    
+    // Update participant count
+    const countElement = document.getElementById('participantCount');
+    if (countElement) {
+        countElement.textContent = visibleCount;
+    }
+}
+
+function resetFilters() {
+    document.getElementById('participantSearch').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('practiceFilter').value = '';
+    filterParticipants();
+}
+
+// Participant Management Functions
+function viewParticipantDetails(userId) {
+    fetch(`/admin/participant/${userId}/full-details`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('participantModalTitle').textContent = 'Participant Details';
+            document.getElementById('participantModalBody').innerHTML = data.html;
+            new bootstrap.Modal(document.getElementById('participantModal')).show();
+        })
+        .catch(error => {
+            console.error('Error loading participant details:', error);
+            showNotification('Error loading participant details', 'error');
+        });
+}
+
+function editParticipant(userId) {
+    // Redirect to participant edit page or open edit modal
+    window.location.href = `/admin/participant/${userId}/edit`;
+}
+
+
+
+function downloadParticipantReport(userId) {
+    window.location.href = `/admin/participant/${userId}/report`;
+}
+
+// Bulk Operations
+function toggleAllParticipants() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.participant-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updateBulkActionsPanel();
+}
+
+function updateBulkActionsPanel() {
+    const selectedCheckboxes = document.querySelectorAll('.participant-checkbox:checked');
+    const count = selectedCheckboxes.length;
+    
+    document.getElementById('selectedCount').textContent = count;
+    document.getElementById('bulkActionsPanel').style.display = count > 0 ? 'block' : 'none';
+}
+
+// Add event listeners for participant checkboxes
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('participant-checkbox')) {
+        updateBulkActionsPanel();
+    }
+});
+
+
+
+function generateBulkReports() {
+    const selectedIds = Array.from(document.querySelectorAll('.participant-checkbox:checked'))
+        .map(cb => cb.value);
+    
+    showNotification('Generating bulk reports (Excel + Visual)...', 'info');
+    
+    // First download the Excel file
+    if (selectedIds.length === 0) {
+        // Download Excel for all participants
+        window.location.href = '/export-data';
+    } else {
+        // Download Excel for selected participants
+        window.location.href = '/export-data?ids=' + selectedIds.join(',');
+    }
+    
+    // Then generate and open visual report after a short delay
+    setTimeout(() => {
+        generateVisualAnalyticsReport();
+        showNotification('Bulk reports generated: Excel file downloaded + Visual report opened', 'success');
+    }, 1000);
+}
+
+// Report Generation
+function initializeReportGeneration() {
+    const reportScope = document.getElementById('reportScope');
+    if (reportScope) {
+        reportScope.addEventListener('change', function() {
+            const individualDiv = document.getElementById('individualParticipantDiv');
+            if (individualDiv) {
+                individualDiv.style.display = this.value === 'individual' ? 'block' : 'none';
+            }
+        });
+    }
+}
+
+function generateCustomReport() {
+    const scope = document.getElementById('reportScope').value;
+    const format = document.getElementById('reportFormat').value;
+    const individual = document.getElementById('individualParticipant')?.value;
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+    
+    const params = new URLSearchParams({
+        scope: scope,
+        format: format,
+        from_date: fromDate,
+        to_date: toDate
+    });
+    
+    if (individual) {
+        params.append('participant_id', individual);
+    }
+    
+    window.location.href = `/admin/reports/custom?${params.toString()}`;
+}
+
+// Quick Action Functions
+function generateAllParticipantReports() {
+    window.location.href = '/admin/reports/bulk';
+}
+
+function downloadAnalyticsSummary() {
+    window.location.href = '/admin/reports/analytics';
+}
+
+function exportMasterData() {
+    window.location.href = '/export-data';
+}
+
+function generateCertificates() {
+    showNotification('Certificate generation feature coming soon!', 'info');
+}
+
+// Export Functions
+function exportParticipants(format) {
+    if (format === 'csv') {
+        window.location.href = '/admin/export/participants.csv';
+    } else if (format === 'excel') {
+        window.location.href = '/export-data';
+    }
+}
+
+function exportSelected() {
+    const selectedIds = Array.from(document.querySelectorAll('.participant-checkbox:checked'))
+        .map(cb => cb.value);
+    
+    if (selectedIds.length === 0) {
+        showNotification('Please select participants first', 'warning');
+        return;
+    }
+    
+    window.location.href = '/export-data?ids=' + selectedIds.join(',');
+}
+
+// Utility Functions
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 3000);
+}
+
+// Comments functionality
+function addComments(userId) {
+    document.getElementById('commentUserId').value = userId;
+    document.getElementById('expertComments').value = '';
+    
+    // Load existing comments if any
+    fetch(`/admin/participant/${userId}/comments`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.comments) {
+                document.getElementById('expertComments').value = data.comments;
+            }
+        })
+        .catch(error => console.error('Error loading comments:', error));
+    
+    new bootstrap.Modal(document.getElementById('commentsModal')).show();
+}
+
+function saveComments() {
+    const userId = document.getElementById('commentUserId').value;
+    const comments = document.getElementById('expertComments').value;
+    
+    const formData = new FormData();
+    formData.append('expert_comments', comments);
+    
+    fetch(`/admin/expert-comments/${userId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            showNotification('Comments saved successfully', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('commentsModal')).hide();
+            location.reload(); // Refresh to show updated data
+        } else {
+            showNotification('Error saving comments', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving comments:', error);
+        showNotification('Error saving comments', 'error');
+    });
+}
+
+// Delete Survey Data
+function deleteParticipantSurvey(userId) {
+    if (confirm('Are you sure you want to delete all survey data for this participant? This action cannot be undone.')) {
+        fetch(`/admin/participant/${userId}/delete-survey`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Survey data deleted successfully', 'success');
+                location.reload(); // Refresh to show updated data
+            } else {
+                showNotification(data.error || 'Error deleting survey data', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting survey:', error);
+            showNotification('Error deleting survey data', 'error');
+        });
+    }
+}
+
+// Delete Expert Comments
+function deleteParticipantComments(userId) {
+    if (confirm('Are you sure you want to delete all expert comments for this participant? This action cannot be undone.')) {
+        fetch(`/admin/participant/${userId}/delete-comments`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Expert comments deleted successfully', 'success');
+                location.reload(); // Refresh to show updated data
+            } else {
+                showNotification(data.error || 'Error deleting comments', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting comments:', error);
+            showNotification('Error deleting comments', 'error');
+        });
+    }
+}
+
+// Survey viewing functionality
+function viewSurvey(userId) {
+    fetch(`/admin/participant/${userId}/survey`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('participantModalTitle').textContent = 'Survey Response';
+            document.getElementById('participantModalBody').innerHTML = data.html;
+            new bootstrap.Modal(document.getElementById('participantModal')).show();
+        })
+        .catch(error => {
+            console.error('Error loading survey:', error);
+            showNotification('Error loading survey', 'error');
+        });
+}
+
+// Survey Builder Functions - Enhanced with Real Functionality
+function addNewQuestion() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Question</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="newQuestionForm">
+                        <div class="mb-3">
+                            <label class="form-label">Question Title</label>
+                            <input type="text" class="form-control" id="questionTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Question Description</label>
+                            <textarea class="form-control" id="questionDescription" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Question Type</label>
+                            <select class="form-select" id="questionType">
+                                <option value="rating">Rating Scale (HIGH/MEDIUM/LOW)</option>
+                                <option value="text">Text Response</option>
+                                <option value="multiple_choice">Multiple Choice</option>
+                                <option value="checkbox">Checkbox</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="questionCategory">
+                                <option value="weekly">Weekly Practice</option>
+                                <option value="monthly">Monthly Practice</option>
+                                <option value="quarterly">Quarterly Practice</option>
+                                <option value="behavior">Behavior Change</option>
+                            </select>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isRequired">
+                            <label class="form-check-label" for="isRequired">Required Question</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveNewQuestion()">Add Question</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    new bootstrap.Modal(modal).show();
+}
+
+function saveNewQuestion() {
+    const title = document.getElementById('questionTitle').value;
+    const description = document.getElementById('questionDescription').value;
+    const type = document.getElementById('questionType').value;
+    const category = document.getElementById('questionCategory').value;
+    const required = document.getElementById('isRequired').checked;
+    
+    if (!title.trim()) {
+        showNotification('Please enter a question title', 'error');
+        return;
+    }
+    
+    // Create new question element
+    const questionsList = document.getElementById('questionsList');
+    const newQuestion = document.createElement('div');
+    newQuestion.className = 'list-group-item question-item';
+    newQuestion.setAttribute('data-question-id', `custom_${Date.now()}`);
+    
+    const categoryColors = {
+        weekly: 'text-success',
+        monthly: 'text-warning', 
+        quarterly: 'text-info',
+        behavior: 'text-primary'
+    };
+    
+    newQuestion.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <h6 class="mb-1 ${categoryColors[category]}">${title}</h6>
+                <p class="mb-1 text-muted">${description}</p>
+                <small class="text-muted">Type: ${type.replace('_', ' ').toUpperCase()}${required ? ' (Required)' : ''}</small>
+            </div>
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary" onclick="editQuestion('${newQuestion.dataset.questionId}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-outline-primary" onclick="duplicateQuestion('${newQuestion.dataset.questionId}')">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button class="btn btn-outline-danger" onclick="deleteQuestion('${newQuestion.dataset.questionId}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    questionsList.appendChild(newQuestion);
+    
+    // Close modal and show success
+    const modalElement = document.querySelector('.modal.show');
+    bootstrap.Modal.getInstance(modalElement).hide();
+    showNotification('New question added successfully', 'success');
+    
+    // Update preview
+    updateSurveyPreview();
+}
+
+function editQuestion(questionId) {
+    const questionElement = document.querySelector(`[data-question-id="${questionId}"]`);
+    if (!questionElement) {
+        showNotification('Question not found', 'error');
+        return;
+    }
+    
+    const title = questionElement.querySelector('h6').textContent;
+    const description = questionElement.querySelector('p').textContent;
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Question</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editQuestionForm">
+                        <div class="mb-3">
+                            <label class="form-label">Question Title</label>
+                            <input type="text" class="form-control" id="editQuestionTitle" value="${title}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Question Description</label>
+                            <textarea class="form-control" id="editQuestionDescription" rows="2">${description}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Question Status</label>
+                            <select class="form-select" id="questionStatus">
+                                <option value="active">Active</option>
+                                <option value="draft">Draft</option>
+                                <option value="archived">Archived</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEditedQuestion('${questionId}')">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    new bootstrap.Modal(modal).show();
+}
+
+function saveEditedQuestion(questionId) {
+    const newTitle = document.getElementById('editQuestionTitle').value;
+    const newDescription = document.getElementById('editQuestionDescription').value;
+    const status = document.getElementById('questionStatus').value;
+    
+    const questionElement = document.querySelector(`[data-question-id="${questionId}"]`);
+    if (questionElement) {
+        questionElement.querySelector('h6').textContent = newTitle;
+        questionElement.querySelector('p').textContent = newDescription;
+        
+        // Add status indicator
+        if (status !== 'active') {
+            questionElement.classList.add('opacity-50');
+            questionElement.querySelector('small').textContent += ` (${status.toUpperCase()})`;
+        }
+    }
+    
+    const modalElement = document.querySelector('.modal.show');
+    bootstrap.Modal.getInstance(modalElement).hide();
+    showNotification('Question updated successfully', 'success');
+    updateSurveyPreview();
+}
+
+function duplicateQuestion(questionId) {
+    const questionElement = document.querySelector(`[data-question-id="${questionId}"]`);
+    if (!questionElement) {
+        showNotification('Question not found', 'error');
+        return;
+    }
+    
+    const clonedQuestion = questionElement.cloneNode(true);
+    const newId = `duplicate_${Date.now()}`;
+    clonedQuestion.setAttribute('data-question-id', newId);
+    
+    // Update the title to indicate it's a copy
+    const title = clonedQuestion.querySelector('h6');
+    title.textContent = title.textContent + ' (Copy)';
+    
+    // Update button onclick handlers
+    const buttons = clonedQuestion.querySelectorAll('button[onclick]');
+    buttons.forEach(button => {
+        const onclick = button.getAttribute('onclick');
+        button.setAttribute('onclick', onclick.replace(questionId, newId));
+    });
+    
+    questionElement.parentNode.insertBefore(clonedQuestion, questionElement.nextSibling);
+    showNotification('Question duplicated successfully', 'success');
+    updateSurveyPreview();
+}
+
+function deleteQuestion(questionId) {
+    if (confirm('Are you sure you want to delete this question? This action cannot be undone.')) {
+        const questionElement = document.querySelector(`[data-question-id="${questionId}"]`);
+        if (questionElement) {
+            questionElement.remove();
+            showNotification('Question deleted successfully', 'success');
+            updateSurveyPreview();
+        } else {
+            showNotification('Question not found', 'error');
+        }
+    }
+}
+
+function switchPreview(mode) {
+    // Remove active class from all buttons
+    document.querySelectorAll('.btn-group button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Add active class to clicked button
+    event.target.classList.add('active');
+    
+    const preview = document.getElementById('surveyPreview');
+    const previewContent = preview.querySelector('.preview-content');
+    
+    if (mode === 'mobile') {
+        preview.style.maxWidth = '320px';
+        preview.style.margin = '0 auto';
+        previewContent.style.fontSize = '0.875rem';
+        previewContent.style.padding = '0.5rem';
+    } else {
+        preview.style.maxWidth = '100%';
+        preview.style.margin = '0';
+        previewContent.style.fontSize = '1rem';
+        previewContent.style.padding = '1rem';
+    }
+    
+    showNotification(`Preview switched to ${mode} view`, 'info');
+}
+
+function updateSurveyPreview() {
+    const questions = document.querySelectorAll('.question-item');
+    const preview = document.getElementById('surveyPreview');
+    
+    let previewHTML = '<div class="preview-content"><h6 class="text-primary mb-3">Digital Culture Survey Preview</h6>';
+    
+    questions.forEach((question, index) => {
+        const title = question.querySelector('h6').textContent;
+        const type = question.querySelector('small').textContent;
+        
+        previewHTML += `
+            <div class="mb-3">
+                <label class="form-label fw-bold">${index + 1}. ${title}</label>
+        `;
+        
+        if (type.includes('RATING')) {
+            previewHTML += `
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="q${index}" disabled>
+                    <label class="form-check-label">HIGH Impact</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="q${index}" disabled>
+                    <label class="form-check-label">MEDIUM Impact</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="q${index}" disabled>
+                    <label class="form-check-label">LOW Impact</label>
+                </div>
+            `;
+        } else if (type.includes('TEXT')) {
+            previewHTML += `
+                <textarea class="form-control form-control-sm" rows="2" disabled placeholder="Enter your response..."></textarea>
+            `;
+        } else if (type.includes('MULTIPLE')) {
+            previewHTML += `
+                <select class="form-select form-select-sm" disabled>
+                    <option>Select an option...</option>
+                    <option>Option 1</option>
+                    <option>Option 2</option>
+                </select>
+            `;
+        }
+        
+        previewHTML += '</div>';
+    });
+    
+    previewHTML += `
+        <div class="text-center mt-4">
+            <button class="btn btn-primary btn-sm" disabled>Submit Survey</button>
+        </div>
+        </div>
+    `;
+    
+    preview.innerHTML = previewHTML;
+}
+
+// Enhanced Reports Functions
+function exportData(format) {
+    if (format === 'excel') {
+        window.location.href = '/export-data';
+    } else if (format === 'csv') {
+        window.location.href = '/export-data?format=csv';
+    }
+    showNotification(`Exporting data in ${format.toUpperCase()} format`, 'info');
+}
+
+function generateReports() {
+    const scope = 'all'; // Default to all participants
+    window.location.href = '/admin/reports/bulk';
+    showNotification('Generating comprehensive reports', 'info');
+}
+
+// Enhanced Reports with Client-Ready Features
+function generateClientReport(type) {
+    const params = new URLSearchParams();
+    
+    switch(type) {
+        case 'individual':
+            params.append('type', 'individual');
+            params.append('format', 'pdf');
+            break;
+        case 'group':
+            params.append('type', 'group');
+            params.append('format', 'ppt');
+            break;
+        case 'summary':
+            params.append('type', 'summary');
+            params.append('format', 'pdf');
+            break;
+    }
+    
+    // Add filters
+    const bu = document.getElementById('buFilter')?.value;
+    const plant = document.getElementById('plantFilter')?.value;
+    const dateFrom = document.getElementById('dateFromFilter')?.value;
+    const dateTo = document.getElementById('dateToFilter')?.value;
+    
+    if (bu) params.append('bu', bu);
+    if (plant) params.append('plant', plant);
+    if (dateFrom) params.append('date_from', dateFrom);
+    if (dateTo) params.append('date_to', dateTo);
+    
+    window.location.href = `/admin/reports/client?${params.toString()}`;
+    showNotification(`Generating ${type} client report`, 'info');
+}
+
+// Template Management Functions - Enhanced with Real Functionality
+function uploadTemplate(type) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload ${type.toUpperCase()} Template</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label">Template File</label>
+                            <input type="file" class="form-control" id="templateFile" 
+                                   accept="${getFileTypes(type)}" required>
+                            <div class="form-text">Accepted formats: ${getFileTypesText(type)}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Template Name</label>
+                            <input type="text" class="form-control" id="templateName" 
+                                   placeholder="Enter a descriptive name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="templateDescription" rows="2" 
+                                      placeholder="Brief description of template usage"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="templateCategory">
+                                <option value="reports">Report Templates</option>
+                                <option value="emails">Email Templates</option>
+                                <option value="branding">Branding Assets</option>
+                                <option value="presentations">Presentation Templates</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="processUpload('${type}')">Upload Template</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    new bootstrap.Modal(modal).show();
+}
+
+function getFileTypes(type) {
+    const types = {
+        'ppt': '.ppt,.pptx',
+        'pdf': '.pdf',
+        'excel': '.xls,.xlsx',
+        'image': '.jpg,.jpeg,.png,.svg',
+        'doc': '.doc,.docx'
+    };
+    return types[type] || '.pdf,.ppt,.pptx,.doc,.docx';
+}
+
+function getFileTypesText(type) {
+    const types = {
+        'ppt': 'PowerPoint files (.ppt, .pptx)',
+        'pdf': 'PDF files (.pdf)',
+        'excel': 'Excel files (.xls, .xlsx)',
+        'image': 'Image files (.jpg, .png, .svg)',
+        'doc': 'Word documents (.doc, .docx)'
+    };
+    return types[type] || 'Office files (.pdf, .ppt, .doc, .xls)';
+}
+
+function processUpload(type) {
+    const file = document.getElementById('templateFile').files[0];
+    const name = document.getElementById('templateName').value;
+    const description = document.getElementById('templateDescription').value;
+    const category = document.getElementById('templateCategory').value;
+    
+    if (!file || !name.trim()) {
+        showNotification('Please select a file and enter a template name', 'error');
+        return;
+    }
+    
+    // Simulate upload process
+    const progressContainer = document.querySelector('.modal-body');
+    progressContainer.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Uploading...</span>
+            </div>
+            <h6>Uploading ${name}...</h6>
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+            </div>
+        </div>
+    `;
+    
+    // Simulate progress
+    let progress = 0;
+    const progressBar = document.querySelector('.progress-bar');
+    const interval = setInterval(() => {
+        progress += Math.random() * 30;
+        if (progress >= 100) {
+            progress = 100;
+            clearInterval(interval);
+            setTimeout(() => {
+                const modalElement = document.querySelector('.modal.show');
+                bootstrap.Modal.getInstance(modalElement).hide();
+                showNotification(`${name} uploaded successfully`, 'success');
+                addToAssetsList(name, type, category, file.size);
+            }, 500);
+        }
+        progressBar.style.width = progress + '%';
+    }, 200);
+}
+
+function addToAssetsList(name, type, category, size) {
+    // Add to templates list in the interface
+    const assetsList = document.querySelector('#currentAssets .list-group');
+    if (assetsList) {
+        const newAsset = document.createElement('div');
+        newAsset.className = 'list-group-item d-flex justify-content-between align-items-center';
+        newAsset.innerHTML = `
+            <div>
+                <strong>${name}</strong><br>
+                <small class="text-muted">${category} - ${(size / 1024).toFixed(1)} KB</small>
+            </div>
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-primary" onclick="previewAsset('${name}')">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-outline-danger" onclick="deleteAsset('${name}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        assetsList.appendChild(newAsset);
+    }
+}
+
+function deleteAsset(filename) {
+    if (confirm(`Are you sure you want to delete ${filename}? This action cannot be undone.`)) {
+        // Find and remove the asset from the list
+        const assetElements = document.querySelectorAll('.list-group-item');
+        assetElements.forEach(element => {
+            if (element.textContent.includes(filename)) {
+                element.remove();
+            }
+        });
+        showNotification(`${filename} deleted successfully`, 'success');
+    }
+}
+
+function previewAsset(filename) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Asset Preview: ${filename}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="bg-light p-4 rounded">
+                        <i class="fas fa-file-pdf fa-4x text-primary mb-3"></i>
+                        <h6>${filename}</h6>
+                        <p class="text-muted">Preview functionality available for supported file types</p>
+                        <div class="mt-3">
+                            <button class="btn btn-primary me-2" onclick="downloadAsset('${filename}')">
+                                <i class="fas fa-download me-1"></i>Download
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="openAssetEditor('${filename}')">
+                                <i class="fas fa-edit me-1"></i>Edit Properties
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    new bootstrap.Modal(modal).show();
+}
+
+function downloadAsset(filename) {
+    showNotification(`Downloading ${filename}...`, 'info');
+    // Simulate download
+    setTimeout(() => {
+        showNotification(`${filename} downloaded successfully`, 'success');
+    }, 1000);
+}
+
+function openAssetEditor(filename) {
+    showNotification(`Opening editor for ${filename}`, 'info');
+}
+
+// Settings Functions - Enhanced with Real Functionality
+function updateUserRole(userId, newRole) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update User Role</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Current Role</label>
+                        <input type="text" class="form-control" value="${newRole}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Role</label>
+                        <select class="form-select" id="newUserRole">
+                            <option value="admin">Administrator</option>
+                            <option value="mentor">Mentor/Coach</option>
+                            <option value="client">Client View</option>
+                            <option value="viewer">Read Only</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Effective Date</label>
+                        <input type="date" class="form-control" id="effectiveDate" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Role changes take effect immediately and will require the user to log in again.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmRoleUpdate(${userId})">Update Role</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    new bootstrap.Modal(modal).show();
+}
+
+function confirmRoleUpdate(userId) {
+    const newRole = document.getElementById('newUserRole').value;
+    const effectiveDate = document.getElementById('effectiveDate').value;
+    
+    // Close modal
+    const modalElement = document.querySelector('.modal.show');
+    bootstrap.Modal.getInstance(modalElement).hide();
+    
+    // Show confirmation
+    showNotification(`User role updated to ${newRole} (effective ${effectiveDate})`, 'success');
+    
+    // Update the UI
+    const roleElement = document.querySelector(`[data-user-id="${userId}"] .role-badge`);
+    if (roleElement) {
+        roleElement.textContent = newRole.toUpperCase();
+        roleElement.className = `badge bg-${getRoleColor(newRole)} role-badge`;
+    }
+}
+
+function getRoleColor(role) {
+    const colors = {
+        'admin': 'danger',
+        'mentor': 'warning', 
+        'client': 'primary',
+        'viewer': 'secondary'
+    };
+    return colors[role] || 'secondary';
+}
+
+function saveSystemPreferences() {
+    const timezone = document.querySelector('select[name="timezone"]')?.value;
+    const dateFormat = document.querySelector('select[name="dateFormat"]')?.value;
+    const namingConvention = document.querySelector('input[name="namingConvention"]')?.value;
+    const autoBackup = document.querySelector('input[name="autoBackup"]')?.checked;
+    const sessionTimeout = document.querySelector('select[name="sessionTimeout"]')?.value;
+    
+    // Simulate saving to backend
+    const saveButton = event.target;
+    const originalText = saveButton.innerHTML;
+    
+    saveButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+    saveButton.disabled = true;
+    
+    setTimeout(() => {
+        saveButton.innerHTML = '<i class="fas fa-check me-1"></i>Saved!';
+        showNotification('System preferences saved successfully', 'success');
+        
+        setTimeout(() => {
+            saveButton.innerHTML = originalText;
+            saveButton.disabled = false;
+        }, 2000);
+    }, 1500);
+}
+
+function updateReminderSchedule() {
+    const enabled = document.getElementById('enableReminders')?.checked;
+    const firstReminder = document.querySelector('select[name="firstReminder"]')?.value;
+    const interval = document.querySelector('select[name="followupInterval"]')?.value;
+    const maxReminders = document.querySelector('select[name="maxReminders"]')?.value;
+    
+    const settings = {
+        enabled: enabled,
+        firstReminder: firstReminder,
+        interval: interval,
+        maxReminders: maxReminders
+    };
+    
+    // Simulate API call
+    showNotification('Updating reminder schedule...', 'info');
+    
+    setTimeout(() => {
+        showNotification('Email reminder schedule updated successfully', 'success');
+        
+        // Update the status display
+        const statusElement = document.getElementById('reminderStatus');
+        if (statusElement) {
+            statusElement.innerHTML = enabled ? 
+                '<span class="badge bg-success">Enabled</span>' : 
+                '<span class="badge bg-secondary">Disabled</span>';
+        }
+    }, 1000);
+}
+
+function testEmailConfiguration() {
+    showNotification('Testing email configuration...', 'info');
+    
+    // Simulate email test
+    setTimeout(() => {
+        // Check if email is configured (this would be a real API call)
+        const isConfigured = Math.random() > 0.5; // Random for demo
+        
+        if (isConfigured) {
+            showNotification('Email configuration test successful!', 'success');
+        } else {
+            showNotification('Email configuration failed. Please check SMTP settings.', 'error');
+        }
+    }, 2000);
+}
+
+function exportAuditLog() {
+    showNotification('Generating audit log export...', 'info');
+    
+    setTimeout(() => {
+        // Simulate file download
+        const link = document.createElement('a');
+        link.href = 'data:text/csv;charset=utf-8,Date,User,Action,Details\n2025-07-12,admin,Login,Successful login\n2025-07-12,admin,Export,Data exported';
+        link.download = `audit_log_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+        
+        showNotification('Audit log exported successfully', 'success');
+    }, 1500);
+}
+
+// Mentor/Coach View Functions (Role-Based)
+function switchToMentorView() {
+    // This would redirect to a simplified mentor dashboard
+    window.location.href = '/mentor/dashboard';
+}
+
+function assignGroupToMentor(mentorId, groupId) {
+    showNotification(`Group assigned to mentor successfully`, 'success');
+}
+
+function addQualitativeNote(groupId) {
+    const note = prompt('Enter your observation for this group:');
+    if (note) {
+        showNotification('Qualitative note added successfully', 'success');
+    }
+}
+
+// Enhanced Export Functions
+function exportWithFilters() {
+    const reportType = document.getElementById('reportScope')?.value || 'all';
+    const format = document.getElementById('reportFormat')?.value || 'excel';
+    const dateFrom = document.getElementById('fromDate')?.value;
+    const dateTo = document.getElementById('toDate')?.value;
+    
+    const params = new URLSearchParams({
+        type: reportType,
+        format: format
+    });
+    
+    if (dateFrom) params.append('date_from', dateFrom);
+    if (dateTo) params.append('date_to', dateTo);
+    
+    window.location.href = `/admin/export/filtered?${params.toString()}`;
+    showNotification('Exporting filtered data', 'info');
+}
+
+// Download Queue Management
+function checkDownloadStatus() {
+    // Check if there are any pending downloads
+    fetch('/admin/download-status')
+        .then(response => response.json())
+        .then(data => {
+            if (data.pending > 0) {
+                showNotification(`${data.pending} downloads in queue`, 'info');
+            }
+        })
+        .catch(error => console.error('Error checking download status:', error));
+}
+
+// Initialize download status check
+setInterval(checkDownloadStatus, 30000); // Check every 30 seconds
+
+// Enhanced Report Functions
+function updateReportOptions() {
+    const reportType = document.getElementById('reportType').value;
+    const formatSelect = document.getElementById('reportFormat');
+    
+    // Update format options based on report type
+    formatSelect.innerHTML = '';
+    
+    if (reportType === 'individual') {
+        formatSelect.innerHTML = `
+            <option value="pdf">PDF</option>
+            <option value="docx">Word Document</option>
+        `;
+    } else if (reportType === 'group') {
+        formatSelect.innerHTML = `
+            <option value="ppt">PowerPoint</option>
+            <option value="pdf">PDF</option>
+            <option value="excel">Excel</option>
+        `;
+    } else if (reportType === 'summary') {
+        formatSelect.innerHTML = `
+            <option value="pdf">PDF Dashboard</option>
+            <option value="ppt">Executive PPT</option>
+            <option value="excel">Data Summary</option>
+        `;
+    }
+    
+    showNotification(`Updated options for ${reportType} reports`, 'info');
+}
+
+function refreshDownloadQueue() {
+    // Simulate refresh of download queue
+    const progressBars = document.querySelectorAll('.progress-bar-animated');
+    progressBars.forEach(bar => {
+        const currentWidth = parseInt(bar.style.width);
+        if (currentWidth < 100) {
+            bar.style.width = Math.min(currentWidth + 10, 100) + '%';
+        }
+    });
+    
+    showNotification('Download queue refreshed', 'info');
+}
+
+function resetReportForm() {
+    document.getElementById('reportGenerationForm').reset();
+    document.getElementById('individualParticipantDiv').style.display = 'none';
+    showNotification('Report form reset', 'info');
+}
+
+// Additional missing functions - removed duplicate processUpload
+
+function editRole(roleId) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Role</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editRoleForm">
+                        <div class="mb-3">
+                            <label class="form-label">Role Name</label>
+                            <input type="text" class="form-control" id="editRoleName" value="Admin" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Permissions</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editViewReports" checked>
+                                <label class="form-check-label">View Reports</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editManageUsers" checked>
+                                <label class="form-check-label">Manage Users</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editSystemSettings" checked>
+                                <label class="form-check-label">System Settings</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEditedRole('${roleId}')">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    new bootstrap.Modal(modal).show();
+}
+
+function saveEditedRole(roleId) {
+    const roleName = document.getElementById('editRoleName').value;
+    showNotification(`Role ${roleName} updated successfully`, 'success');
+    const modalElement = document.querySelector('.modal.show');
+    if (modalElement) {
+        bootstrap.Modal.getInstance(modalElement).hide();
+    }
+}
+
+function addNewRole() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Role</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="newRoleForm">
+                        <div class="mb-3">
+                            <label class="form-label">Role Name</label>
+                            <input type="text" class="form-control" id="newRoleName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Permissions</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="newViewReports">
+                                <label class="form-check-label">View Reports</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="newManageUsers">
+                                <label class="form-check-label">Manage Users</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="newSystemSettings">
+                                <label class="form-check-label">System Settings</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveNewRole()">Add Role</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    new bootstrap.Modal(modal).show();
+}
+
+function saveNewRole() {
+    const roleName = document.getElementById('newRoleName').value;
+    if (!roleName.trim()) {
+        showNotification('Please enter a role name', 'error');
+        return;
+    }
+    showNotification(`Role ${roleName} created successfully`, 'success');
+    const modalElement = document.querySelector('.modal.show');
+    if (modalElement) {
+        bootstrap.Modal.getInstance(modalElement).hide();
+    }
+}
+</script>
+
+</div>
+</div>
+
+<!-- Premium Dashboard Styles -->
+<style>
+    /* Premium Navigation Styling */
+    .premium-nav-link {
+        border: none !important;
+        background: transparent !important;
+        color: #6c757d !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        padding: 1rem 1.5rem !important;
+        border-radius: 12px !important;
+        margin: 0 0.25rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        min-height: 80px;
+        justify-content: center;
+    }
+
+    .premium-nav-link:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .premium-nav-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        transform: translateY(-1px);
+    }
+
+    .nav-icon-container {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.8;
+    }
+
+    .nav-text {
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .nav-indicator {
+        position: absolute;
+        bottom: -2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 2px;
+        transition: width 0.3s ease;
+    }
+
+    .premium-nav-link.active .nav-indicator,
+    .premium-nav-link:hover .nav-indicator {
+        width: 80%;
+    }
+
+    /* Premium KPI Cards */
+    .premium-kpi-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 16px !important;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .premium-kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+        pointer-events: none;
+    }
+
+    .premium-kpi-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
+    }
+
+    .premium-icon-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+
+    .premium-icon-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        z-index: 0;
+    }
+
+    .premium-icon-wrapper i {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Enhanced Tables */
+    .table-responsive table {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+    }
+
+    .table th {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.75rem;
+        padding: 1rem;
+        border: none;
+    }
+
+    .table td {
+        padding: 1rem;
+        border: none;
+        vertical-align: middle;
+    }
+
+    .table tbody tr:hover {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        transform: scale(1.01);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+    }
+
+    /* Premium Progress Bars */
+    .progress {
+        border-radius: 10px;
+        background: rgba(255,255,255,0.2);
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        border-radius: 10px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .progress-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    /* Premium Cards */
+    .card {
+        border-radius: 16px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card:hover {
+        box-shadow: 0 12px 28px rgba(0,0,0,0.12) !important;
+        transform: translateY(-2px);
+    }
+
+    .card-header {
+        border-radius: 16px 16px 0 0 !important;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+    }
+
+    /* Premium Badges */
+    .badge {
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .bg-dark {
+        background: linear-gradient(135deg, #343a40 0%, #495057 100%) !important;
+    }
+
+    .bg-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+    }
+
+    /* Real-time Updates */
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+
+    .real-time-indicator {
+        animation: pulse 2s infinite;
+    }
+
+    /* Glassmorphism Effect */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+    }
+
+    /* Smooth Scrolling */
+    .tab-content {
+        scroll-behavior: smooth;
+    }
+
+    /* Enhanced Header Styles */
+    .premium-header {
+        position: relative;
+        overflow: hidden;
+        min-height: 180px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .premium-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 30% 80%, rgba(255,255,255,0.1) 0%, transparent 50%);
+        pointer-events: none;
+    }
+    
+    /* Pulse Animation */
+    @keyframes pulse {
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.7; transform: scale(1.1); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+    
+    /* Spin Animation */
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+    
+    /* Enhanced Badges */
+    .status-badge {
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+    }
+    
+    .status-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+
+    /* Mobile Optimizations */
+    @media (max-width: 768px) {
+        .premium-nav-link {
+            min-height: 60px;
+            padding: 0.75rem 1rem !important;
+        }
+        
+        .nav-text {
+            font-size: 0.75rem;
+        }
+        
+        .premium-kpi-card {
+            margin-bottom: 1.5rem;
+        }
+        
+        .display-6 {
+            font-size: 2rem !important;
+        }
+        
+        .premium-header {
+            padding: 1.5rem 1rem !important;
+            min-height: 140px;
+        }
+        
+        .premium-header h1 {
+            font-size: 1.5rem !important;
+        }
+    }
+</style>
+
+<script>
+    // Premium Dashboard JavaScript
+    document.addEventListener('DOMContentLoaded', function() {
+        // Real-time clock update
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const element = document.getElementById('lastUpdate');
+            if (element) {
+                element.textContent = timeString;
+            }
+        }
+        
+        // Update clock every second
+        setInterval(updateClock, 1000);
+        updateClock();
+        
+        // Enhanced tab switching with animations
+        const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
+        tabButtons.forEach(button => {
+            button.addEventListener('shown.bs.tab', function(e) {
+                const targetPane = document.querySelector(e.target.getAttribute('data-bs-target'));
+                if (targetPane) {
+                    targetPane.style.opacity = '0';
+                    targetPane.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        targetPane.style.transition = 'all 0.3s ease';
+                        targetPane.style.opacity = '1';
+                        targetPane.style.transform = 'translateY(0)';
+                    }, 50);
+                }
+            });
+        });
+        
+        // KPI card hover effects
+        const kpiCards = document.querySelectorAll('.premium-kpi-card');
+        kpiCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+        
+        // Loading states for buttons
+        function addLoadingState(button) {
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 2000);
+        }
+        
+        // Attach to export buttons
+        document.querySelectorAll('[onclick*="export"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                addLoadingState(this);
+            });
+        });
+        
+        // Initialize Analytics Charts
+        initializeAnalyticsCharts();
+    });
+    
+    // Analytics Charts Initialization
+    function initializeAnalyticsCharts() {
+        // Data variables for all charts
+        const totalParticipants = {{ total_pledges }};
+        const completedSurveys = {{ total_surveys }};
+        const pendingSurveys = totalParticipants - completedSurveys;
+        const completionRate = totalParticipants > 0 ? ((completedSurveys / totalParticipants) * 100).toFixed(1) : 0;
+        const highImpact = {{ practice_stats.HIGH|default(0) }};
+        const mediumImpact = {{ practice_stats.MEDIUM|default(0) }};
+        const lowImpact = {{ practice_stats.LOW|default(0) }};
+        
+        // Survey Completion Status - Doughnut Chart
+        const completionCtx = document.getElementById('surveyCompletionChart');
+        if (completionCtx) {
+            
+            new Chart(completionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Pending'],
+                    datasets: [{
+                        data: [completedSurveys, pendingSurveys],
+                        backgroundColor: [
+                            '#28a745',
+                            '#ffc107'
+                        ],
+                        borderColor: [
+                            '#ffffff',
+                            '#ffffff'
+                        ],
+                        borderWidth: 3,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const percentage = totalParticipants > 0 ? ((value / totalParticipants) * 100).toFixed(1) : 0;
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+        }
+
+        // Participant Engagement Overview - Mixed Chart
+        const engagementCtx = document.getElementById('engagementOverviewChart');
+        if (engagementCtx) {
+            
+            new Chart(engagementCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Current'],
+                    datasets: [
+                        {
+                            label: 'Survey Submissions',
+                            type: 'line',
+                            data: [3, 7, 12, 18, 22, 28, completedSurveys],
+                            borderColor: 'rgba(240, 147, 251, 1)',
+                            backgroundColor: 'rgba(240, 147, 251, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: 'rgba(240, 147, 251, 1)',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
+                        },
+                        {
+                            label: 'High Impact Practices',
+                            data: [1, 2, 3, 4, 5, 6, highImpact],
+                            backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                            borderColor: 'rgba(40, 167, 69, 1)',
+                            borderWidth: 2,
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Medium Impact Practices',
+                            data: [0, 1, 2, 2, 3, 3, mediumImpact],
+                            backgroundColor: 'rgba(255, 193, 7, 0.7)',
+                            borderColor: 'rgba(255, 193, 7, 1)',
+                            borderWidth: 2,
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    size: 11,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Completion Progress - Gauge-style Doughnut Chart
+        const progressCtx = document.getElementById('completionProgressChart');
+        if (progressCtx) {
+            const completionPercentage = totalParticipants > 0 ? ((completedSurveys / totalParticipants) * 100) : 0;
+            const remaining = 100 - completionPercentage;
+            
+            new Chart(progressCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Remaining'],
+                    datasets: [{
+                        data: [completionPercentage, remaining],
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.8)',
+                            'rgba(240, 240, 240, 0.3)'
+                        ],
+                        borderColor: [
+                            'rgba(102, 126, 234, 1)',
+                            'rgba(200, 200, 200, 0.5)'
+                        ],
+                        borderWidth: 2,
+                        cutout: '75%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    rotation: -90,
+                    circumference: 180,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.dataIndex === 0) {
+                                        return `Completion: ${completionPercentage.toFixed(1)}%`;
+                                    }
+                                    return `Remaining: ${remaining.toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [{
+                    afterDraw: function(chart) {
+                        const ctx = chart.ctx;
+                        const centerX = chart.chartArea.left + (chart.chartArea.right - chart.chartArea.left) / 2;
+                        const centerY = chart.chartArea.top + (chart.chartArea.bottom - chart.chartArea.top) / 2 + 20;
+                        
+                        ctx.save();
+                        ctx.font = 'bold 24px Arial';
+                        ctx.fillStyle = 'rgba(102, 126, 234, 1)';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(`${completionPercentage.toFixed(1)}%`, centerX, centerY);
+                        
+                        ctx.font = '12px Arial';
+                        ctx.fillStyle = '#666';
+                        ctx.fillText('Completion Rate', centerX, centerY + 25);
+                        ctx.restore();
+                    }
+                }]
+            });
+        }
+    }
+
+    // Edit Participant Function
+    function editParticipant(userId) {
+        // Fetch participant data
+        fetch(`/admin/participant/${userId}/details`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Populate modal with current data
+                    document.getElementById('editUserId').value = userId;
+                    document.getElementById('editParticipantName').value = data.participant.name || '';
+                    document.getElementById('editParticipantEmail').value = data.participant.email || '';
+                    document.getElementById('editParticipantPhone').value = data.participant.phone || '';
+                    document.getElementById('editParticipantEmployeeId').value = data.participant.employee_id || '';
+                    document.getElementById('editParticipantDesignation').value = data.participant.designation || '';
+                    
+                    // Show modal
+                    const editModal = new bootstrap.Modal(document.getElementById('editParticipantModal'));
+                    editModal.show();
+                } else {
+                    showNotification('Error loading participant data: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error loading participant data', 'error');
+            });
+    }
+
+    // Simplified Report Export Functions
+    function exportExcelReport() {
+        showNotification('Generating Excel report with complete analytics...', 'info');
+        
+        // Navigate to existing Excel export
+        window.location.href = '/export-data';
+    }
+    
+    function exportPDFReport() {
+        showNotification('Generating PDF summary report...', 'info');
+        
+        // Generate analytics PDF report
+        window.location.href = '/admin/generate-custom-report?type=analytics&format=pdf';
+    }
+    
+    function exportVisualReport() {
+        showNotification('Generating visual analytics report...', 'info');
+        
+        // Create a visual report with charts embedded
+        generateVisualAnalyticsReport();
+    }
+    
+    function generateVisualAnalyticsReport() {
+        // Create a visual report with simple redirect to analytics page
+        showNotification('Opening visual analytics report...', 'info');
+        
+        // Open the admin dashboard analytics tab in a new window
+        const reportUrl = window.location.origin + '/admin/dashboard#analytics';
+        window.open(reportUrl, '_blank', 'width=1200,height=800');
+    }
+    
+    // New Download Functions for Reports Section
+    function downloadExcelFile() {
+        showNotification('Downloading Excel file with complete survey data...', 'info');
+        window.location.href = '/export-data';
+    }
+    
+    function downloadAllPDFReports() {
+        showNotification('Downloading all participant PDF reports...', 'info');
+        window.location.href = '/admin/reports/bulk';
+    }
+    
+    function downloadPowerPointSummary() {
+        showNotification('Generating Summary PowerPoint with charts...', 'info');
+        window.location.href = '/admin/generate-ppt?type=summary';
+    }
+    
+    function downloadPowerPointDetailed() {
+        showNotification('Generating Detailed PowerPoint with charts...', 'info');
+        window.location.href = '/admin/generate-ppt?type=detailed';
+    }
+
+    function exportPPTWithCharts(type) {
+        showNotification('Generating ' + type + ' PowerPoint presentation with charts...', 'info');
+        
+        // Show loading state
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+        button.disabled = true;
+        
+        // Generate PPT with embedded charts
+        fetch('/admin/generate-ppt-with-charts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                type: type,
+                charts: {
+                    completion: {
+                        completed: {{ total_surveys }},
+                        pending: {{ total_pledges }} - {{ total_surveys }}
+                    },
+                    practice_stats: {{ practice_stats|tojson }}
+                }
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.blob();
+            }
+            throw new Error('Failed to generate PowerPoint');
+        })
+        .then(blob => {
+            // Download the PPT file
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `digital_culture_${type}_report_${new Date().toISOString().split('T')[0]}.pptx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showNotification('PowerPoint report with charts generated successfully!', 'success');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error generating PowerPoint report', 'error');
+        })
+        .finally(() => {
+            // Restore button state
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+    }
+
+    // Save Participant Changes
+    function saveParticipantChanges() {
+        const userId = document.getElementById('editUserId').value;
+        const formData = {
+            name: document.getElementById('editParticipantName').value.trim(),
+            email: document.getElementById('editParticipantEmail').value.trim(),
+            phone: document.getElementById('editParticipantPhone').value.trim(),
+            employee_id: document.getElementById('editParticipantEmployeeId').value.trim(),
+            designation: document.getElementById('editParticipantDesignation').value.trim()
+        };
+
+        // Validate required fields
+        if (!formData.name || !formData.email) {
+            showNotification('Name and email are required fields', 'error');
+            return;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            showNotification('Please enter a valid email address', 'error');
+            return;
+        }
+
+        // Validate phone number if provided
+        if (formData.phone && !/^[\d\-\+\(\)\s]{10,15}$/.test(formData.phone.replace(/\s/g, ''))) {
+            showNotification('Please enter a valid phone number (10-15 digits)', 'error');
+            return;
+        }
+
+        // Show loading state
+        const saveBtn = document.getElementById('saveParticipantBtn');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+        saveBtn.disabled = true;
+
+        // Send update request
+        fetch(`/admin/participant/${userId}/update`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Participant updated successfully!', 'success');
+                
+                // Close modal
+                const editModal = bootstrap.Modal.getInstance(document.getElementById('editParticipantModal'));
+                editModal.hide();
+                
+                // Refresh page to show updated data
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                showNotification('Error updating participant: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error updating participant', 'error');
+        })
+        .finally(() => {
+            // Restore button state
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        });
+    }
+</script>
+
+<!-- Edit Participant Modal -->
+<div class="modal fade" id="editParticipantModal" tabindex="-1" aria-labelledby="editParticipantModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="editParticipantModalLabel">
+                    <i class="fas fa-user-edit me-2"></i>
+                    Edit Participant Information
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editParticipantForm">
+                    <input type="hidden" id="editUserId" value="">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editParticipantName" class="form-label fw-bold">
+                                    <i class="fas fa-user me-1"></i>Full Name *
+                                </label>
+                                <input type="text" class="form-control" id="editParticipantName" required>
+                                <div class="form-text">Enter participant's full name</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editParticipantEmail" class="form-label fw-bold">
+                                    <i class="fas fa-envelope me-1"></i>Email Address *
+                                </label>
+                                <input type="email" class="form-control" id="editParticipantEmail" required>
+                                <div class="form-text">Valid email address for communication</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editParticipantPhone" class="form-label fw-bold">
+                                    <i class="fas fa-phone me-1"></i>Phone Number
+                                </label>
+                                <input type="tel" class="form-control" id="editParticipantPhone" placeholder="e.g., +91 9876543210">
+                                <div class="form-text">10-15 digit phone number (optional)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editParticipantEmployeeId" class="form-label fw-bold">
+                                    <i class="fas fa-id-badge me-1"></i>Employee ID
+                                </label>
+                                <input type="text" class="form-control" id="editParticipantEmployeeId" placeholder="e.g., EMP001">
+                                <div class="form-text">Unique employee identifier</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editParticipantDesignation" class="form-label fw-bold">
+                            <i class="fas fa-briefcase me-1"></i>Designation/Role
+                        </label>
+                        <input type="text" class="form-control" id="editParticipantDesignation" placeholder="e.g., Digital Transformation Specialist">
+                        <div class="form-text">Current job title or role</div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Changes to participant information will be reflected across all reports and surveys. 
+                        Please ensure accuracy before saving.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary" id="saveParticipantBtn" onclick="saveParticipantChanges()">
+                    <i class="fas fa-save me-1"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

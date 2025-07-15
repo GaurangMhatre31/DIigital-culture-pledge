@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Expert Comments Notification -->
+{% set has_new_comments = survey_responses | selectattr('expert_comments') | list %}
+{% if has_new_comments %}
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-bell fa-lg text-primary me-3"></i>
+                <div>
+                    <strong>New Expert Feedback Available!</strong>
+                    <p class="mb-0">Your mentor has provided feedback on {{ has_new_comments|length }} of your survey responses. Check your survey history below to read the comments.</p>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="fas fa-user-circle me-2"></i>
+                Welcome, {{ user.name }}
+            </h1>
+            <div>
+                {% if survey_responses %}
+                <a href="{{ url_for('download_report') }}" class="btn btn-primary me-2">
+                    <i class="fas fa-download me-2"></i>
+                    Download PDF Report
+                </a>
+                {% endif %}
+                <a href="{{ url_for('survey_form') }}" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>
+                    New Survey
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Pledge Summary -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-star me-2"></i>
+                    Your Digital North Star
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="text-primary">Problem Statement</h6>
+                        <p class="text-muted">{{ user.problem_statement or 'Not specified' }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-primary">Success Metric</h6>
+                        <p class="text-muted">{{ user.success_metric or 'Not specified' }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-primary">Timeline</h6>
+                        <p class="text-muted">{{ user.timeline or 'Not specified' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Committed Practices -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-tasks me-2"></i>
+                    Your Committed Practices
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Weekly Practice -->
+                    {% if user.weekly_practice_1 %}
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-success"><i class="fas fa-calendar-week me-2"></i>Weekly Practice</h6>
+                        <p class="text-muted">{{ user.weekly_practice_1 }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Monthly Practices -->
+                    {% if user.monthly_practice_1 or user.monthly_practice_2 %}
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-info"><i class="fas fa-calendar-alt me-2"></i>Monthly Practices</h6>
+                        {% if user.monthly_practice_1 %}
+                        <p class="text-muted mb-2">1. {{ user.monthly_practice_1 }}</p>
+                        {% endif %}
+                        {% if user.monthly_practice_2 %}
+                        <p class="text-muted">2. {{ user.monthly_practice_2 }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Quarterly Practices -->
+                    {% if user.quarterly_practice_1 or user.quarterly_practice_2 %}
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-warning"><i class="fas fa-calendar me-2"></i>Quarterly Practices</h6>
+                        {% if user.quarterly_practice_1 %}
+                        <p class="text-muted mb-2">1. {{ user.quarterly_practice_1 }}</p>
+                        {% endif %}
+                        {% if user.quarterly_practice_2 %}
+                        <p class="text-muted">2. {{ user.quarterly_practice_2 }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Custom Practice -->
+                    {% if user.custom_practice %}
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-secondary"><i class="fas fa-cogs me-2"></i>Custom Practice</h6>
+                        <p class="text-muted">{{ user.custom_practice }}</p>
+                        <small class="text-muted">Frequency: {{ user.custom_frequency or 'Not specified' }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Survey History -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Your Survey History ({{ survey_responses|length }} surveys completed)
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if survey_responses %}
+                <div class="accordion" id="surveyAccordion">
+                    {% for response in survey_responses %}
+                    <div class="accordion-item mb-3">
+                        <h2 class="accordion-header" id="heading{{ response.id }}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ response.id }}">
+                                <div class="d-flex justify-content-between w-100 me-3">
+                                    <span>
+                                        <i class="fas fa-clipboard-check me-2"></i>
+                                        Survey submitted on {{ response.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                    </span>
+                                    {% if response.expert_comments %}
+                                    <span class="badge bg-success fs-6">
+                                        <i class="fas fa-star me-1"></i>Expert Feedback Available
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapse{{ response.id }}" class="accordion-collapse collapse" data-bs-parent="#surveyAccordion">
+                            <div class="accordion-body">
+                                <!-- Expert Comments -->
+                                {% if response.expert_comments %}
+                                <div class="alert alert-success mb-4 border-start border-4 border-warning">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <i class="fas fa-user-tie fa-2x text-warning me-3"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="alert-heading mb-2">
+                                                <i class="fas fa-star me-2 text-warning"></i>
+                                                Expert Feedback from Mentor
+                                            </h6>
+                                            <p class="mb-0 fw-medium">{{ response.expert_comments }}</p>
+                                            <small class="text-muted mt-2 d-block">
+                                                <i class="fas fa-clock me-1"></i>
+                                                Last updated: {{ response.updated_at.strftime('%B %d, %Y at %I:%M %p') if response.updated_at else response.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Weekly Practices -->
+                                {% if response.data.weekly_practices %}
+                                <div class="mb-4">
+                                    <h6 class="text-success"><i class="fas fa-calendar-week me-2"></i>Weekly Practices</h6>
+                                    {% for key, practice in response.data.weekly_practices.items() %}
+                                    <div class="card mb-2">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <strong>Impact Level:</strong>
+                                                    <span class="badge bg-{% if (practice.impact_level or practice.impact) == 'HIGH' %}success{% elif (practice.impact_level or practice.impact) == 'MEDIUM' %}warning{% else %}danger{% endif %}">
+                                                        {{ practice.impact_level or practice.impact or 'Not rated' }}
+                                                    </span>
+                                                </div>
+                                                <div class="col-md-9">
+                                                    <div class="mb-1"><strong>Action Taken:</strong> {{ practice.action_taken or practice.action or 'No response' }}</div>
+                                                    <div class="mb-1"><strong>What Worked/Didn't Work:</strong> {{ practice.what_worked or practice.explanation or 'No response' }}</div>
+                                                    <div><strong>Action Needed Next:</strong> {{ practice.action_needed or practice.needed or 'No response' }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Monthly Practices -->
+                                {% if response.data.monthly_practices %}
+                                <div class="mb-4">
+                                    <h6 class="text-info"><i class="fas fa-calendar-alt me-2"></i>Monthly Practices</h6>
+                                    {% for key, practice in response.data.monthly_practices.items() %}
+                                    <div class="card mb-2">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <strong>Impact Level:</strong>
+                                                    <span class="badge bg-{% if (practice.impact_level or practice.impact) == 'HIGH' %}success{% elif (practice.impact_level or practice.impact) == 'MEDIUM' %}warning{% else %}danger{% endif %}">
+                                                        {{ practice.impact_level or practice.impact or 'Not rated' }}
+                                                    </span>
+                                                </div>
+                                                <div class="col-md-9">
+                                                    <div class="mb-1"><strong>Action Taken:</strong> {{ practice.action_taken or practice.action or 'No response' }}</div>
+                                                    <div class="mb-1"><strong>What Worked/Didn't Work:</strong> {{ practice.what_worked or practice.explanation or 'No response' }}</div>
+                                                    <div><strong>Action Needed Next:</strong> {{ practice.action_needed or practice.needed or 'No response' }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Quarterly Practices -->
+                                {% if response.data.quarterly_practices %}
+                                <div class="mb-4">
+                                    <h6 class="text-warning"><i class="fas fa-calendar me-2"></i>Quarterly Practices</h6>
+                                    {% for key, practice in response.data.quarterly_practices.items() %}
+                                    <div class="card mb-2">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <strong>Impact Level:</strong>
+                                                    <span class="badge bg-{% if (practice.impact_level or practice.impact) == 'HIGH' %}success{% elif (practice.impact_level or practice.impact) == 'MEDIUM' %}warning{% else %}danger{% endif %}">
+                                                        {{ practice.impact_level or practice.impact or 'Not rated' }}
+                                                    </span>
+                                                </div>
+                                                <div class="col-md-9">
+                                                    <div class="mb-1"><strong>Action Taken:</strong> {{ practice.action_taken or practice.action or 'No response' }}</div>
+                                                    <div class="mb-1"><strong>What Worked/Didn't Work:</strong> {{ practice.what_worked or practice.explanation or 'No response' }}</div>
+                                                    <div><strong>Action Needed Next:</strong> {{ practice.action_needed or practice.needed or 'No response' }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Behavior Changes -->
+                                {% if response.data.start_behaviors or response.data.reduce_behaviors or response.data.stop_behaviors %}
+                                <div class="mb-4">
+                                    <h6 class="text-warning"><i class="fas fa-exchange-alt me-2"></i>Behavior Changes</h6>
+                                    
+                                    {% if response.data.start_behaviors %}
+                                    <div class="mb-3">
+                                        <h6 class="text-success">START Behaviors</h6>
+                                        {% for key, behavior in response.data.start_behaviors.items() %}
+                                        <div class="card mb-2">
+                                            <div class="card-body">
+                                                <div class="mb-1"><strong>Action Taken:</strong> {{ behavior.action_taken or 'No response' }}</div>
+                                                <div><strong>Action Needed Next:</strong> {{ behavior.action_needed or 'No response' }}</div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if response.data.reduce_behaviors %}
+                                    <div class="mb-3">
+                                        <h6 class="text-warning">REDUCE Behaviors</h6>
+                                        {% for key, behavior in response.data.reduce_behaviors.items() %}
+                                        <div class="card mb-2">
+                                            <div class="card-body">
+                                                <div class="mb-1"><strong>Action Taken:</strong> {{ behavior.action_taken or 'No response' }}</div>
+                                                <div><strong>Action Needed Next:</strong> {{ behavior.action_needed or 'No response' }}</div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if response.data.stop_behaviors %}
+                                    <div class="mb-3">
+                                        <h6 class="text-danger">STOP Behaviors</h6>
+                                        {% for key, behavior in response.data.stop_behaviors.items() %}
+                                        <div class="card mb-2">
+                                            <div class="card-body">
+                                                <div class="mb-1"><strong>Action Taken:</strong> {{ behavior.action_taken or 'No response' }}</div>
+                                                <div><strong>Action Needed Next:</strong> {{ behavior.action_needed or 'No response' }}</div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-clipboard-list text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="text-muted mt-3">No surveys completed yet</h5>
+                    <p class="text-muted">Complete your first survey to track your digital transformation progress.</p>
+                    <a href="{{ url_for('survey_form') }}" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>
+                        Start Your First Survey
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

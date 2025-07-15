@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+
+{% block title %}Survey Form{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-0">
+                        <i class="fas fa-clipboard-check me-2"></i>
+                        Digital Culture Pledge Survey
+                    </h4>
+                    <p class="mb-0 mt-2">Review your practices and behaviors based on your current pledge</p>
+                </div>
+                <div>
+                    {% if last_survey %}
+                    <a href="{{ url_for('download_report') }}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-download me-1"></i>Download PDF
+                    </a>
+                    {% else %}
+                    <small class="text-light opacity-75">Complete a survey to download PDF report</small>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="surveyForm">
+                    <!-- User Name Display -->
+                    <div class="user-name-section mb-4 text-center">
+                        <h2 class="text-primary fw-bold mb-2">
+                            <i class="fas fa-user me-2"></i>
+                            {{ user.name.upper() }}
+                        </h2>
+                        
+                        {% if draft_data %}
+                        <div class="alert alert-warning mt-3">
+                            <h6 class="mb-2">
+                                <i class="fas fa-clock me-2"></i>
+                                Draft Saved: {{ draft_data.save_timestamp and draft_data.save_timestamp[:19] or 'Unknown time' }}
+                            </h6>
+                            <small class="text-muted">Your progress has been automatically restored. Click "Save Progress" to update.</small>
+                        </div>
+                        {% endif %}
+                        
+
+                    </div>
+                    
+                    {% if last_survey and last_survey_data %}
+                    <!-- Last Survey Details (Collapsible) -->
+                    <div class="collapse mb-4" id="lastSurveyDetails">
+                        <div class="card border-secondary">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0 text-secondary">
+                                    <i class="fas fa-clipboard-list me-2"></i>
+                                    Your Previous Survey Responses
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <!-- Weekly Practice Response -->
+                                    {% if last_survey_data.weekly_practices and last_survey_data.weekly_practices.weekly_practice_1 %}
+                                    <div class="col-md-6 mb-3">
+                                        <h6 class="text-success"><i class="fas fa-calendar-week me-2"></i>Weekly Practice</h6>
+                                        {% set weekly = last_survey_data.weekly_practices.weekly_practice_1 %}
+                                        <small class="text-muted">
+                                            <strong>Impact:</strong> {{ weekly.impact_level or 'Not rated' }}<br>
+                                            <strong>Action Taken:</strong> {{ weekly.action_taken or 'No response' }}<br>
+                                            <strong>What Worked:</strong> {{ weekly.what_worked or 'No response' }}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Monthly Practices Response -->
+                                    {% if last_survey_data.monthly_practices %}
+                                    <div class="col-md-6 mb-3">
+                                        <h6 class="text-info"><i class="fas fa-calendar-alt me-2"></i>Monthly Practices</h6>
+                                        {% for key, monthly in last_survey_data.monthly_practices.items() %}
+                                        <small class="text-muted d-block mb-2">
+                                            <strong>{{ key.replace('_', ' ').title() }}:</strong> {{ monthly.impact_level or 'Not rated' }}<br>
+                                            {{ (monthly.action_taken or 'No response')[:50] }}{% if monthly.action_taken and monthly.action_taken|length > 50 %}...{% endif %}
+                                        </small>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Behavior Summary -->
+                                {% if last_survey_data.start_behaviors or last_survey_data.reduce_behaviors or last_survey_data.stop_behaviors %}
+                                <div class="mt-3">
+                                    <h6 class="text-warning"><i class="fas fa-exchange-alt me-2"></i>Behavior Changes</h6>
+                                    <div class="row">
+                                        {% if last_survey_data.start_behaviors %}
+                                        <div class="col-md-4">
+                                            <small class="text-success d-block"><strong>START:</strong></small>
+                                            {% for key, behavior in last_survey_data.start_behaviors.items() %}
+                                            <small class="text-muted d-block">{{ (behavior.action_taken or 'No action')[:30] }}...</small>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if last_survey_data.reduce_behaviors %}
+                                        <div class="col-md-4">
+                                            <small class="text-warning d-block"><strong>REDUCE:</strong></small>
+                                            {% for key, behavior in last_survey_data.reduce_behaviors.items() %}
+                                            <small class="text-muted d-block">{{ (behavior.action_taken or 'No action')[:30] }}...</small>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if last_survey_data.stop_behaviors %}
+                                        <div class="col-md-4">
+                                            <small class="text-danger d-block"><strong>STOP:</strong></small>
+                                            {% for key, behavior in last_survey_data.stop_behaviors.items() %}
+                                            <small class="text-muted d-block">{{ (behavior.action_taken or 'No action')[:30] }}...</small>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Digital North Star Box -->
+                    <div class="card border-info mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h4 class="mb-0 text-center">
+                                <i class="fas fa-star me-2"></i>
+                                Your Digital North Star
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="north-star-item">
+                                        <h6 class="text-primary"><i class="fas fa-bullseye me-2"></i>Problem Statement</h6>
+                                        <p class="text-muted">{{ user.problem_statement or 'Not specified' }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="north-star-item">
+                                        <h6 class="text-success"><i class="fas fa-chart-line me-2"></i>Success Metric</h6>
+                                        <p class="text-muted">{{ user.success_metric or 'Not specified' }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="north-star-item">
+                                        <h6 class="text-warning"><i class="fas fa-clock me-2"></i>Timeline</h6>
+                                        <p class="text-muted">{{ user.timeline or 'Not specified' }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Weekly Practice Section -->
+                    <div class="card border-danger mb-4">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0 text-center">
+                                <i class="fas fa-calendar-week me-2"></i>
+                                Weekly Practice Assessment
+                            </h5>
+                        </div>
+                        
+                        {% set weekly_practice = ('Use Dashboards as a Management Habit', user.weekly_practice_1) %}
+                        
+                        <div class="practice-survey-item mb-4">
+                            <h6 class="text-dark">{{ weekly_practice[0] }}</h6>
+                            <div class="pledge-context">
+                                <strong>Your Pledge:</strong> {{ weekly_practice[1] or 'Not specified' }}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Impact Level</label>
+                                    <select class="form-select" name="weekly_practice_1_impact" required>
+                                        <option value="">Select impact...</option>
+                                        <option value="HIGH">HIGH - Major positive impact</option>
+                                        <option value="MEDIUM">MEDIUM - Moderate impact</option>
+                                        <option value="LOW">LOW - Limited impact</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Action Taken</label>
+                                    <textarea class="form-control" name="weekly_practice_1_action_taken" rows="3" placeholder="What specific actions did you take this week?"></textarea>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Action Needed Next</label>
+                                    <textarea class="form-control" name="weekly_practice_1_action_needed" rows="3" placeholder="What do you need to do next week?"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Monthly Practices Section -->
+                    <div class="card border-warning mb-4">
+                        <div class="card-header bg-warning text-white">
+                            <h5 class="mb-0 text-center">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                Monthly Practice Assessment
+                            </h5>
+                        </div>
+                        
+                        {% set monthly_practices = [
+                            ('Make Data-Driven Decision-Making the Norm', user.monthly_practice_1),
+                            ('Drive Digital Fluency Through Team Upskilling', user.monthly_practice_2)
+                        ] %}
+                        
+                        {% for practice_name, practice_value in monthly_practices %}
+                        <div class="practice-survey-item mb-4">
+                            <h6 class="text-dark">{{ practice_name }}</h6>
+                            <div class="pledge-context">
+                                <strong>Your Pledge:</strong> {{ practice_value or 'Not specified' }}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Impact Level</label>
+                                    <select class="form-select" name="monthly_practice_{{ loop.index }}_impact" required>
+                                        <option value="">Select impact...</option>
+                                        <option value="HIGH">HIGH - Major positive impact</option>
+                                        <option value="MEDIUM">MEDIUM - Moderate impact</option>
+                                        <option value="LOW">LOW - Limited impact</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Action Taken</label>
+                                    <textarea class="form-control" name="monthly_practice_{{ loop.index }}_action_taken" rows="3" placeholder="What specific actions did you take this month?"></textarea>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Action Needed Next</label>
+                                    <textarea class="form-control" name="monthly_practice_{{ loop.index }}_action_needed" rows="3" placeholder="What do you need to do next month?"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Quarterly Practices Section -->
+                    <div class="card border-info mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0 text-center">
+                                <i class="fas fa-calendar me-2"></i>
+                                Quarterly Practice Assessment
+                            </h5>
+                        </div>
+                        
+                        {% set quarterly_practices = [
+                            ('Set a Digital Ambition for Your Function', user.quarterly_practice_1),
+                            ('Sponsor 1-2 Digital Experiments Per Quarter', user.quarterly_practice_2)
+                        ] %}
+                        
+                        {% for practice_name, practice_value in quarterly_practices %}
+                        <div class="practice-survey-item mb-4">
+                            <h6 class="text-dark">{{ practice_name }}</h6>
+                            <div class="pledge-context">
+                                <strong>Your Pledge:</strong> {{ practice_value or 'Not specified' }}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Impact Level</label>
+                                    <select class="form-select" name="quarterly_practice_{{ loop.index }}_impact" required>
+                                        <option value="">Select impact...</option>
+                                        <option value="HIGH">HIGH - Major positive impact</option>
+                                        <option value="MEDIUM">MEDIUM - Moderate impact</option>
+                                        <option value="LOW">LOW - Limited impact</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Action Taken</label>
+                                    <textarea class="form-control" name="quarterly_practice_{{ loop.index }}_action_taken" rows="3" placeholder="What specific actions did you take this quarter?"></textarea>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Action Needed Next</label>
+                                    <textarea class="form-control" name="quarterly_practice_{{ loop.index }}_action_needed" rows="3" placeholder="What do you need to do next quarter?"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Behavior Change Section -->
+                    <div class="card border-success mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0 text-center">
+                                <i class="fas fa-exchange-alt me-2"></i>
+                                Behavior Change Assessment
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- START Behaviors -->
+                            <h6 class="text-success mb-3">
+                                <i class="fas fa-play me-2"></i>
+                                START - Behaviors you will start
+                            </h6>
+                            
+                            {% if user.behavior_start_1 %}
+                            <div class="behavior-item mb-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Behavior 1 to Start</label>
+                                    <div class="pledge-context">
+                                        <strong>Your Pledge:</strong> {{ user.behavior_start_1 }}
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Action Taken</label>
+                                        <textarea class="form-control" name="behavior_start_1_action_taken" rows="3" placeholder="What actions have you taken to start this behavior?"></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Action Needed Next</label>
+                                        <textarea class="form-control" name="behavior_start_1_action_needed" rows="3" placeholder="What do you need to do to continue building this behavior?"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if user.behavior_start_2 %}
+                            <div class="behavior-item mb-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Behavior 2 to Start</label>
+                                    <div class="pledge-context">
+                                        <strong>Your Pledge:</strong> {{ user.behavior_start_2 }}
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Action Taken</label>
+                                        <textarea class="form-control" name="behavior_start_2_action_taken" rows="3" placeholder="What actions have you taken to start this behavior?"></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Action Needed Next</label>
+                                        <textarea class="form-control" name="behavior_start_2_action_needed" rows="3" placeholder="What do you need to do to continue building this behavior?"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- STOP Behaviors -->
+                            <h6 class="text-danger mb-3">
+                                <i class="fas fa-stop me-2"></i>
+                                STOP - Behaviors you will stop
+                            </h6>
+                            
+                            {% if user.behavior_stop_1 %}
+                            <div class="behavior-item mb-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Behavior 1 to Stop</label>
+                                    <div class="pledge-context">
+                                        <strong>Your Pledge:</strong> {{ user.behavior_stop_1 }}
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Action Taken</label>
+                                        <textarea class="form-control" name="behavior_stop_1_action_taken" rows="3" placeholder="What have you done to stop this behavior?"></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Action Needed Next</label>
+                                        <textarea class="form-control" name="behavior_stop_1_action_needed" rows="3" placeholder="What else do you need to do to completely stop this behavior?"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if user.behavior_stop_2 %}
+                            <div class="behavior-item mb-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Behavior 2 to Stop</label>
+                                    <div class="pledge-context">
+                                        <strong>Your Pledge:</strong> {{ user.behavior_stop_2 }}
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Action Taken</label>
+                                        <textarea class="form-control" name="behavior_stop_2_action_taken" rows="3" placeholder="What have you done to stop this behavior?"></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Action Needed Next</label>
+                                        <textarea class="form-control" name="behavior_stop_2_action_needed" rows="3" placeholder="What else do you need to do to completely stop this behavior?"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- REDUCE Behaviors -->
+                            <h6 class="text-warning mb-3">
+                                <i class="fas fa-minus-circle me-2"></i>
+                                REDUCE - Behaviors you will reduce
+                            </h6>
+                            
+                            {% if user.behavior_reduce_1 %}
+                            <div class="behavior-item mb-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Behavior 1 to Reduce</label>
+                                    <div class="pledge-context">
+                                        <strong>Your Pledge:</strong> {{ user.behavior_reduce_1 }}
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Action Taken</label>
+                                        <textarea class="form-control" name="behavior_reduce_1_action_taken" rows="3" placeholder="What have you done to reduce this behavior?"></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Action Needed Next</label>
+                                        <textarea class="form-control" name="behavior_reduce_1_action_needed" rows="3" placeholder="What else do you need to do to further reduce this behavior?"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if user.behavior_reduce_2 %}
+                            <div class="behavior-item mb-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Behavior 2 to Reduce</label>
+                                    <div class="pledge-context">
+                                        <strong>Your Pledge:</strong> {{ user.behavior_reduce_2 }}
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Action Taken</label>
+                                        <textarea class="form-control" name="behavior_reduce_2_action_taken" rows="3" placeholder="What have you done to reduce this behavior?"></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Action Needed Next</label>
+                                        <textarea class="form-control" name="behavior_reduce_2_action_needed" rows="3" placeholder="What else do you need to do to further reduce this behavior?"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success btn-lg px-5">
+                            <i class="fas fa-check me-2"></i>Submit Survey
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

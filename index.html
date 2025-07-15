@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center min-vh-100">
+            <div class="col-lg-6">
+                <div class="hero-content">
+                    <h1 class="display-4 fw-bold mb-4">
+                        <i class="fas fa-digital-tachograph text-primary me-3"></i>
+                        Digital Culture Pledge
+                    </h1>
+                    <p class="lead mb-5">
+                        Transform your digital mindset and drive organizational change through structured commitment and continuous learning.
+                    </p>
+                    
+                    <!-- Survey Button Only -->
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-clipboard-check fa-4x text-success mb-4"></i>
+                                    <h4 class="card-title">Digital Culture Survey</h4>
+                                    <p class="card-text mb-4">Track your progress and provide feedback on your digital practices through our comprehensive survey.</p>
+                                    {% if not session.user_id %}
+                                        <a href="{{ url_for('login') }}" class="btn btn-success btn-lg">
+                                            <i class="fas fa-sign-in-alt me-2"></i>
+                                            Start Survey
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ url_for('survey_form') }}" class="btn btn-success btn-lg">
+                                            <i class="fas fa-clipboard-check me-2"></i>
+                                            Take Survey
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Admin Access -->
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('admin_login') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-user-shield me-2"></i>
+                            Admin Access
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="hero-image">
+                    <div class="feature-card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Track Progress</h5>
+                            <p class="card-text">Monitor your digital transformation journey with comprehensive analytics and insights.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="features-section py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="display-6 fw-bold mb-4">Digital Culture Transformation</h2>
+                <p class="lead">Build a sustainable digital culture through structured practices and continuous improvement.</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-tasks fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Weekly Practices</h5>
+                        <p class="card-text">Establish daily habits that embed digital thinking into your routine work processes.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-calendar-alt fa-3x text-success mb-3"></i>
+                        <h5 class="card-title">Monthly Reviews</h5>
+                        <p class="card-text">Regular assessment of progress with data-driven insights and team collaboration.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-trophy fa-3x text-warning mb-3"></i>
+                        <h5 class="card-title">Quarterly Goals</h5>
+                        <p class="card-text">Strategic initiatives that drive long-term digital transformation outcomes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="cta-section py-5 bg-light">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="display-6 fw-bold mb-4">Ready to Take Your Digital Culture Survey?</h2>
+                <p class="lead mb-4">Share your progress and insights on digital transformation practices.</p>
+                
+                <div class="text-center">
+                    {% if not session.user_id %}
+                        <a href="{{ url_for('login') }}" class="btn btn-success btn-lg px-4">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            Start Survey
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('survey_form') }}" class="btn btn-success btn-lg px-4">
+                            <i class="fas fa-clipboard-check me-2"></i>
+                            Take Survey
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
