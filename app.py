@@ -15,6 +15,12 @@ from sqlalchemy import func
 from werkzeug.middleware.proxy_fix import ProxyFix
 import pandas as pd
 import re
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -543,46 +549,45 @@ def create_app():
     @app.route('/export-data')
     @admin_required
     def export_data():
-        """Export all survey data to Excel"""
+        """Export all survey data to Excel (colorful, admin only)"""
         try:
             from openpyxl import Workbook
             from openpyxl.styles import Font, PatternFill, Alignment
             from openpyxl.utils import get_column_letter
             import io
-            
             # Create workbook
             wb = Workbook()
             ws = wb.active
             ws.title = "Digital Culture Survey Responses"
-            
-            # Headers
+            # Headers (colorful, as in screenshot)
             headers = [
-                'Sr', 'Name', 'Email', 'Telephone', 'Problem Statement', 
-                'Success Metric', 'Timeline', 'Weekly Practice 1', 'Monthly Practice 1',
-                'Monthly Practice 2', 'Quarterly Practice 1', 'Quarterly Practice 2',
-                'START Behavior 1', 'START Behavior 2', 'REDUCE Behavior 1',
-                'REDUCE Behavior 2', 'STOP Behavior 1', 'STOP Behavior 2',
-                'Survey Completed', 'Survey Date'
+                'Sr', 'Name', 'Email', 'Telephone', 'Employee_ID', 'Designation', 'Problem Statement', 'Key Success Metric', 'Timeline',
+                'Weekly Practice 1', 'Monthly Practice 1', 'Monthly Practice 2', 'Quarterly Practice 1', 'Quarterly Practice 2',
+                'Custom Practice', 'Custom Frequency',
+                'START Behavior 1', 'START Behavior 2', 'REDUCE Behavior 1', 'REDUCE Behavior 2', 'STOP Behavior 1', 'STOP Behavior 2',
+                'Survey Completed', 'Survey Date', 'Expert Comments Available', 'Last Updated'
             ]
-            
-            # Add headers
+            # Add headers with color
+            header_fill = PatternFill(start_color="B7DEE8", end_color="B7DEE8", fill_type="solid")
             for col_num, header in enumerate(headers, 1):
                 cell = ws.cell(row=1, column=col_num, value=header)
-                cell.font = Font(bold=True)
-                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-                cell.font = Font(bold=True, color="FFFFFF")
-            
+                cell.font = Font(bold=True, color="000000")
+                cell.fill = header_fill
+                cell.alignment = Alignment(horizontal="center", vertical="center")
             # Add data
             participants = HindalcoPledge.query.all()
             for row_num, participant in enumerate(participants, 2):
                 has_survey = bool(participant.survey_responses)
                 survey_date = participant.survey_responses[-1].created_at.strftime('%Y-%m-%d') if participant.survey_responses else ''
-                
+                expert_comments = 'Yes' if any(sr.expert_comments for sr in participant.survey_responses) else 'No'
+                last_updated = participant.survey_responses[-1].updated_at.strftime('%Y-%m-%d %H:%M:%S') if participant.survey_responses else ''
                 row_data = [
-                    participant.sr_no or row_num-1,
+                    participant.sr_no,
                     participant.name,
                     participant.email,
                     participant.phone,
+                    participant.employee_id,
+                    participant.designation,
                     participant.problem_statement,
                     participant.success_metric,
                     participant.timeline,
@@ -591,6 +596,8 @@ def create_app():
                     participant.monthly_practice_2,
                     participant.quarterly_practice_1,
                     participant.quarterly_practice_2,
+                    participant.custom_practice,
+                    participant.custom_frequency,
                     participant.behavior_start_1,
                     participant.behavior_start_2,
                     participant.behavior_reduce_1,
@@ -598,41 +605,106 @@ def create_app():
                     participant.behavior_stop_1,
                     participant.behavior_stop_2,
                     'Yes' if has_survey else 'No',
-                    survey_date
+                    survey_date,
+                    expert_comments,
+                    last_updated
                 ]
-                
                 for col_num, value in enumerate(row_data, 1):
                     ws.cell(row=row_num, column=col_num, value=value)
-            
             # Auto-adjust column widths
             for col in ws.columns:
                 max_length = 0
                 column = col[0].column_letter
                 for cell in col:
                     try:
-                        if len(str(cell.value)) > max_length:
+                        if cell.value and len(str(cell.value)) > max_length:
                             max_length = len(str(cell.value))
                     except:
                         pass
                 adjusted_width = (max_length + 2)
                 ws.column_dimensions[column].width = adjusted_width
-            
             # Save to memory
             output = io.BytesIO()
             wb.save(output)
             output.seek(0)
-            
             # Create response
             response = make_response(output.read())
             response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             response.headers['Content-Disposition'] = f'attachment; filename=hindalco_survey_data_{datetime.now().strftime("%Y%m%d")}.xlsx'
-            
             return response
-            
         except Exception as e:
             logger.error(f"Excel export error: {e}")
             flash('Error generating Excel export.', 'error')
             return redirect(url_for('admin_dashboard'))
+    
+    @app.route('/download-user-report/<int:user_id>')
+    @login_required
+    def download_user_report(user_id):
+        # Only allow if admin or the user themselves
+        if not (session.get('admin_logged_in') or session.get('user_id') == user_id):
+            flash('Access denied.', 'error')
+            return redirect(url_for('user_dashboard'))
+        user = HindalcoPledge.query.get_or_404(user_id)
+        surveys = SurveyResponse.query.filter_by(user_id=user.id).order_by(SurveyResponse.created_at.desc()).all()
+        # Generate PDF
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        styles = getSampleStyleSheet()
+        elements = []
+        elements.append(Paragraph(f"<b>Survey Report for {user.name} ({user.email})</b>", styles['Title']))
+        elements.append(Spacer(1, 12))
+        for idx, survey in enumerate(surveys, 1):
+            elements.append(Paragraph(f"<b>Survey #{idx} - Date: {survey.created_at.strftime('%Y-%m-%d %H:%M')}</b>", styles['Heading2']))
+            try:
+                data = json.loads(survey.response_data)
+            except:
+                data = {}
+            # Weekly
+            if 'weekly_practice_1' in data:
+                elements.append(Paragraph("<b>Weekly Practice 1</b>", styles['Heading3']))
+                wp = data['weekly_practice_1']
+                elements.append(Paragraph(f"Impact: {wp.get('impact', 'N/A')}", styles['Normal']))
+                elements.append(Paragraph(f"Action Taken: {wp.get('action_taken', 'N/A')}", styles['Normal']))
+                elements.append(Paragraph(f"Action Needed: {wp.get('action_needed', 'N/A')}", styles['Normal']))
+                elements.append(Spacer(1, 6))
+            # Monthly
+            for i in range(1, 3):
+                key = f'monthly_practice_{i}'
+                if key in data:
+                    mp = data[key]
+                    elements.append(Paragraph(f"<b>Monthly Practice {i}</b>", styles['Heading3']))
+                    elements.append(Paragraph(f"Impact: {mp.get('impact', 'N/A')}", styles['Normal']))
+                    elements.append(Paragraph(f"Action Taken: {mp.get('action_taken', 'N/A')}", styles['Normal']))
+                    elements.append(Paragraph(f"Action Needed: {mp.get('action_needed', 'N/A')}", styles['Normal']))
+                    elements.append(Spacer(1, 6))
+            # Quarterly
+            for i in range(1, 3):
+                key = f'quarterly_practice_{i}'
+                if key in data:
+                    qp = data[key]
+                    elements.append(Paragraph(f"<b>Quarterly Practice {i}</b>", styles['Heading3']))
+                    elements.append(Paragraph(f"Impact: {qp.get('impact', 'N/A')}", styles['Normal']))
+                    elements.append(Paragraph(f"Action Taken: {qp.get('action_taken', 'N/A')}", styles['Normal']))
+                    elements.append(Paragraph(f"Action Needed: {qp.get('action_needed', 'N/A')}", styles['Normal']))
+                    elements.append(Spacer(1, 6))
+            # Behaviors
+            for btype in ['start', 'reduce', 'stop']:
+                for i in range(1, 3):
+                    key = f'behavior_{btype}_{i}'
+                    if key in data:
+                        beh = data[key]
+                        elements.append(Paragraph(f"<b>{btype.upper()} Behavior {i}</b>", styles['Heading3']))
+                        elements.append(Paragraph(f"Action Taken: {beh.get('action_taken', 'N/A')}", styles['Normal']))
+                        elements.append(Paragraph(f"Action Needed: {beh.get('action_needed', 'N/A')}", styles['Normal']))
+                        elements.append(Spacer(1, 6))
+            if survey.expert_comments:
+                elements.append(Paragraph(f"<b>Expert Comments:</b> {survey.expert_comments}", styles['Normal']))
+            elements.append(Spacer(1, 12))
+        if not surveys:
+            elements.append(Paragraph("No surveys completed yet.", styles['Normal']))
+        doc.build(elements)
+        buffer.seek(0)
+        return send_file(buffer, as_attachment=True, download_name=f"{user.name}_survey_report.pdf", mimetype='application/pdf')
     
     @app.route('/download-report')
     @login_required
