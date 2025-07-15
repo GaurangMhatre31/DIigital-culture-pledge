@@ -826,10 +826,79 @@ def create_app():
         filename = f"Digital_Culture_Transformation_Report_{user.name.replace(' ', '_')}.pdf"
         return send_file(buffer, as_attachment=True, download_name=filename, mimetype='application/pdf')
     
-    @app.route('/download-report')
-    @login_required
-    def download_report():
-        return redirect(url_for('export_data'))
+    @app.route('/admin/download-report/<int:user_id>')
+    @admin_required
+    def admin_download_report(user_id):
+        """
+        Admin can download a PDF report for any user by user_id.
+        This route always returns a PDF, never Excel.
+        """
+        user = HindalcoPledge.query.get_or_404(user_id)
+        surveys = SurveyResponse.query.filter_by(user_id=user.id).order_by(SurveyResponse.created_at.desc()).all()
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
+        elements = []
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle('title', parent=styles['Title'], fontSize=28, alignment=1, textColor=colors.HexColor('#2346b0'), spaceAfter=20)
+        section_header_style = ParagraphStyle('section_header', parent=styles['Heading2'], fontSize=20, alignment=1, textColor=colors.white, backColor=colors.HexColor('#2346b0'), spaceAfter=10, spaceBefore=20)
+        table_header_style = ParagraphStyle('table_header', parent=styles['Heading4'], fontSize=14, alignment=1, textColor=colors.white)
+        # Title
+        elements.append(Paragraph('DIGITAL CULTURE TRANSFORMATION REPORT', title_style))
+        elements.append(Spacer(1, 12))
+        # Personal Info Section
+        elements.append(Paragraph('PERSONAL INFORMATION', section_header_style))
+        personal_data = [
+            ['Field', 'Details'],
+            ['Full Name', user.name or 'Not specified'],
+            ['Email Address', user.email or 'Not specified'],
+            ['Employee ID', user.employee_id or 'Not specified'],
+            ['Phone Number', user.phone or 'Not specified'],
+            ['Designation/Role', user.designation or 'Not specified'],
+            ['Signature Date', 'Not specified'],
+        ]
+        personal_table = Table(personal_data, colWidths=[180, 300])
+        personal_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#2346b0')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('ALIGN', (0,0), (-1,0), 'CENTER'),
+            ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#f6fafd')),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#dbe5f1')),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+        ]))
+        elements.append(personal_table)
+        elements.append(Spacer(1, 12))
+        # Add all survey responses
+        for idx, survey in enumerate(surveys, 1):
+            try:
+                data = json.loads(survey.response_data) if survey.response_data else {}
+            except Exception:
+                data = {}
+            elements.append(Paragraph(f'Survey #{idx}', styles['Heading4']))
+            survey_table_data = [['Field', 'Value']]
+            for k, v in data.items():
+                survey_table_data.append([str(k), str(v)])
+            if survey.expert_comments:
+                survey_table_data.append(['Expert Comments', survey.expert_comments])
+            survey_table = Table(survey_table_data, colWidths=[180, 300])
+            survey_table.setStyle(TableStyle([
+                ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#009e73')),
+                ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                ('ALIGN', (0,0), (-1,0), 'CENTER'),
+                ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#eafaf3')),
+                ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
+                ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+                ('FONTSIZE', (0,0), (-1,-1), 12),
+            ]))
+            elements.append(survey_table)
+            elements.append(Spacer(1, 12))
+        doc.build(elements)
+        buffer.seek(0)
+        filename = f"Digital_Culture_Transformation_Report_{user.name.replace(' ', '_')}.pdf"
+        return send_file(buffer, as_attachment=True, download_name=filename, mimetype='application/pdf')
     
     @app.route('/logout')
     def logout():
