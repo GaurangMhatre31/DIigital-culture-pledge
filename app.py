@@ -1111,7 +1111,7 @@ def initialize_database_with_participants(app):
             def clean_text(s):
                 if pd.isna(s):
                     return ""
-                return re.sub(r'\s+', ' ', s).strip()
+                return re.sub(r'\s+', ' ', str(s)).strip()
 
             def clean_phone(s):
                 if pd.isna(s):
