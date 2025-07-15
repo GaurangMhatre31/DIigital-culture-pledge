@@ -765,77 +765,61 @@ def create_app():
         elements.append(north_star_table)
         # Behavior Change Commitments
         add_section('BEHAVIOR CHANGE COMMITMENTS')
-        # START Behaviors Table
+        # START Behaviors
         elements.append(Paragraph('START Behaviors', styles['Heading3']))
         elements.append(Spacer(1, 6))
-        start_data = [
-            ['Behavior Type', 'Description'],
-            ['START Behavior 1', user.behavior_start_1 or 'Not specified'],
-            ['START Behavior 2', user.behavior_start_2 or 'Not specified'],
+        start_behaviors = [
+            ('behavior_start_1', 'START Behavior 1', user.behavior_start_1),
+            ('behavior_start_2', 'START Behavior 2', user.behavior_start_2),
         ]
-        start_table = Table(start_data, colWidths=[200, 320], rowHeights=28)
-        start_table.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#d9f9e6')),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
-            ('FONTSIZE', (0,0), (-1,-1), 12),
-            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
-            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
-            ('LEFTPADDING', (0,0), (-1,-1), 12),
-            ('RIGHTPADDING', (0,0), (-1,-1), 12),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 10),
-            ('TOPPADDING', (0,0), (-1,-1), 10),
-        ]))
-        elements.append(start_table)
-        elements.append(Spacer(1, 10))
-        # REDUCE Behaviors Table
+        for key, label, pledge in start_behaviors:
+            elements.append(Spacer(1, 6))
+            elements.append(Paragraph(f'<b>{label}</b>', normal))
+            elements.append(Spacer(1, 2))
+            elements.append(Paragraph(f'<b>Pledge/Commitment:</b> {pledge or "Not specified"}', normal))
+            response = survey_data.get(key, {})
+            elements.append(Spacer(1, 2))
+            elements.append(Paragraph(f'<b>Action Taken:</b> {response.get("action_taken", "Not specified")}', normal))
+            elements.append(Spacer(1, 2))
+            elements.append(Paragraph(f'<b>Action Needed:</b> {response.get("action_needed", "Not specified")}', normal))
+            elements.append(Spacer(1, 10))
+        # REDUCE Behaviors
         elements.append(Paragraph('REDUCE Behaviors', styles['Heading3']))
         elements.append(Spacer(1, 6))
-        reduce_data = [
-            ['Behavior Type', 'Description'],
-            ['REDUCE Behavior 1', user.behavior_reduce_1 or 'Not specified'],
-            ['REDUCE Behavior 2', user.behavior_reduce_2 or 'Not specified'],
+        reduce_behaviors = [
+            ('behavior_reduce_1', 'REDUCE Behavior 1', user.behavior_reduce_1),
+            ('behavior_reduce_2', 'REDUCE Behavior 2', user.behavior_reduce_2),
         ]
-        reduce_table = Table(reduce_data, colWidths=[200, 320], rowHeights=28)
-        reduce_table.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#fff7e6')),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
-            ('FONTSIZE', (0,0), (-1,-1), 12),
-            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
-            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#ffe5b4')),
-            ('LEFTPADDING', (0,0), (-1,-1), 12),
-            ('RIGHTPADDING', (0,0), (-1,-1), 12),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 10),
-            ('TOPPADDING', (0,0), (-1,-1), 10),
-        ]))
-        elements.append(reduce_table)
-        elements.append(Spacer(1, 10))
-        # STOP Behaviors Table
+        for key, label, pledge in reduce_behaviors:
+            elements.append(Spacer(1, 6))
+            elements.append(Paragraph(f'<b>{label}</b>', normal))
+            elements.append(Spacer(1, 2))
+            elements.append(Paragraph(f'<b>Pledge/Commitment:</b> {pledge or "Not specified"}', normal))
+            response = survey_data.get(key, {})
+            elements.append(Spacer(1, 2))
+            elements.append(Paragraph(f'<b>Action Taken:</b> {response.get("action_taken", "Not specified")}', normal))
+            elements.append(Spacer(1, 2))
+            elements.append(Paragraph(f'<b>Action Needed:</b> {response.get("action_needed", "Not specified")}', normal))
+            elements.append(Spacer(1, 10))
+        # STOP Behaviors
         elements.append(Paragraph('STOP Behaviors', styles['Heading3']))
         elements.append(Spacer(1, 6))
-        stop_data = [
-            ['Behavior Type', 'Description'],
-            ['STOP Behavior 1', user.behavior_stop_1 or 'Not specified'],
-            ['STOP Behavior 2', user.behavior_stop_2 or 'Not specified'],
+        stop_behaviors = [
+            ('behavior_stop_1', 'STOP Behavior 1', user.behavior_stop_1),
+            ('behavior_stop_2', 'STOP Behavior 2', user.behavior_stop_2),
         ]
-        stop_table = Table(stop_data, colWidths=[200, 320], rowHeights=28)
-        stop_table.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#ffe6e6')),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
-            ('FONTSIZE', (0,0), (-1,-1), 12),
-            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
-            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#f7b6b6')),
-            ('LEFTPADDING', (0,0), (-1,-1), 12),
-            ('RIGHTPADDING', (0,0), (-1,-1), 12),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 10),
-            ('TOPPADDING', (0,0), (-1,-1), 10),
-        ]))
-        elements.append(stop_table)
+        for key, label, pledge in stop_behaviors:
+            elements.append(Spacer(1, 6))
+            elements.append(Paragraph(f'<b>{label}</b>', normal))
+            elements.append(Spacer(1, 2))
+            elements.append(Paragraph(f'<b>Pledge/Commitment:</b> {pledge or "Not specified"}', normal))
+            response = survey_data.get(key, {})
+            elements.append(Spacer(1, 2))
+            elements.append(Paragraph(f'<b>Action Taken:</b> {response.get("action_taken", "Not specified")}', normal))
+            elements.append(Spacer(1, 2))
+            elements.append(Paragraph(f'<b>Action Needed:</b> {response.get("action_needed", "Not specified")}', normal))
+            elements.append(Spacer(1, 10))
+
         # Practice Commitments
         add_section('PRACTICE COMMITMENTS')
         practice_data = [
