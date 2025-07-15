@@ -8,11 +8,19 @@ import os
 import json
 import logging
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response, send_file
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import func
 from werkzeug.middleware.proxy_fix import ProxyFix
+import pandas as pd
+import re
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -163,16 +171,13 @@ def create_app():
         if request.method == 'POST':
             name = request.form.get('name', '').strip()
             email = request.form.get('email', '').strip()
-            
             if not name or not email:
                 flash('Please enter both name and email.', 'error')
                 return render_template('login.html')
-            
             user = HindalcoPledge.query.filter(
                 func.lower(HindalcoPledge.name) == func.lower(name),
                 func.lower(HindalcoPledge.email) == func.lower(email)
             ).first()
-            
             if user:
                 session['user_id'] = user.id
                 session['user_name'] = user.name
@@ -180,7 +185,6 @@ def create_app():
                 return redirect(url_for('user_dashboard'))
             else:
                 flash('Invalid credentials. Please check your name and email.', 'error')
-        
         return render_template('login.html')
     
     @app.route('/user-dashboard')
@@ -189,7 +193,51 @@ def create_app():
     def user_dashboard():
         user = HindalcoPledge.query.get_or_404(session['user_id'])
         surveys = SurveyResponse.query.filter_by(user_id=user.id).order_by(SurveyResponse.created_at.desc()).all()
-        
+        # Attach parsed data for template compatibility
+        for survey in surveys:
+            try:
+                parsed = json.loads(survey.response_data) if survey.response_data else {}
+                # Structure for template: .data.weekly_practices, .data.monthly_practices, etc.
+                data = {}
+                # Weekly
+                if 'weekly_practice_1' in parsed:
+                    data['weekly_practices'] = {'weekly_practice_1': parsed['weekly_practice_1']}
+                else:
+                    data['weekly_practices'] = {}
+                # Monthly
+                monthly = {}
+                for i in range(1, 3):
+                    key = f'monthly_practice_{i}'
+                    if key in parsed:
+                        monthly[key] = parsed[key]
+                data['monthly_practices'] = monthly
+                # Quarterly
+                quarterly = {}
+                for i in range(1, 3):
+                    key = f'quarterly_practice_{i}'
+                    if key in parsed:
+                        quarterly[key] = parsed[key]
+                data['quarterly_practices'] = quarterly
+                # Behaviors
+                start = {}
+                reduce = {}
+                stop = {}
+                for i in range(1, 3):
+                    k = f'behavior_start_{i}'
+                    if k in parsed:
+                        start[k] = parsed[k]
+                    k = f'behavior_reduce_{i}'
+                    if k in parsed:
+                        reduce[k] = parsed[k]
+                    k = f'behavior_stop_{i}'
+                    if k in parsed:
+                        stop[k] = parsed[k]
+                data['start_behaviors'] = start
+                data['reduce_behaviors'] = reduce
+                data['stop_behaviors'] = stop
+                survey.data = type('obj', (object,), data)()
+            except Exception as e:
+                survey.data = type('obj', (object,), {})()
         return render_template('user_dashboard.html', user=user, surveys=surveys, survey_responses=surveys)
     
     @app.route('/survey-form', methods=['GET', 'POST'])
@@ -501,46 +549,45 @@ def create_app():
     @app.route('/export-data')
     @admin_required
     def export_data():
-        """Export all survey data to Excel"""
+        """Export all survey data to Excel (colorful, admin only)"""
         try:
             from openpyxl import Workbook
             from openpyxl.styles import Font, PatternFill, Alignment
             from openpyxl.utils import get_column_letter
             import io
-            
             # Create workbook
             wb = Workbook()
             ws = wb.active
             ws.title = "Digital Culture Survey Responses"
-            
-            # Headers
+            # Headers (colorful, as in screenshot)
             headers = [
-                'Sr', 'Name', 'Email', 'Telephone', 'Problem Statement', 
-                'Success Metric', 'Timeline', 'Weekly Practice 1', 'Monthly Practice 1',
-                'Monthly Practice 2', 'Quarterly Practice 1', 'Quarterly Practice 2',
-                'START Behavior 1', 'START Behavior 2', 'REDUCE Behavior 1',
-                'REDUCE Behavior 2', 'STOP Behavior 1', 'STOP Behavior 2',
-                'Survey Completed', 'Survey Date'
+                'Sr', 'Name', 'Email', 'Telephone', 'Employee_ID', 'Designation', 'Problem Statement', 'Key Success Metric', 'Timeline',
+                'Weekly Practice 1', 'Monthly Practice 1', 'Monthly Practice 2', 'Quarterly Practice 1', 'Quarterly Practice 2',
+                'Custom Practice', 'Custom Frequency',
+                'START Behavior 1', 'START Behavior 2', 'REDUCE Behavior 1', 'REDUCE Behavior 2', 'STOP Behavior 1', 'STOP Behavior 2',
+                'Survey Completed', 'Survey Date', 'Expert Comments Available', 'Last Updated'
             ]
-            
-            # Add headers
+            # Add headers with color
+            header_fill = PatternFill(start_color="B7DEE8", end_color="B7DEE8", fill_type="solid")
             for col_num, header in enumerate(headers, 1):
                 cell = ws.cell(row=1, column=col_num, value=header)
-                cell.font = Font(bold=True)
-                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-                cell.font = Font(bold=True, color="FFFFFF")
-            
+                cell.font = Font(bold=True, color="000000")
+                cell.fill = header_fill
+                cell.alignment = Alignment(horizontal="center", vertical="center")
             # Add data
             participants = HindalcoPledge.query.all()
             for row_num, participant in enumerate(participants, 2):
                 has_survey = bool(participant.survey_responses)
                 survey_date = participant.survey_responses[-1].created_at.strftime('%Y-%m-%d') if participant.survey_responses else ''
-                
+                expert_comments = 'Yes' if any(sr.expert_comments for sr in participant.survey_responses) else 'No'
+                last_updated = participant.survey_responses[-1].updated_at.strftime('%Y-%m-%d %H:%M:%S') if participant.survey_responses else ''
                 row_data = [
-                    participant.sr_no or row_num-1,
+                    participant.sr_no,
                     participant.name,
                     participant.email,
                     participant.phone,
+                    participant.employee_id,
+                    participant.designation,
                     participant.problem_statement,
                     participant.success_metric,
                     participant.timeline,
@@ -549,6 +596,8 @@ def create_app():
                     participant.monthly_practice_2,
                     participant.quarterly_practice_1,
                     participant.quarterly_practice_2,
+                    participant.custom_practice,
+                    participant.custom_frequency,
                     participant.behavior_start_1,
                     participant.behavior_start_2,
                     participant.behavior_reduce_1,
@@ -556,41 +605,231 @@ def create_app():
                     participant.behavior_stop_1,
                     participant.behavior_stop_2,
                     'Yes' if has_survey else 'No',
-                    survey_date
+                    survey_date,
+                    expert_comments,
+                    last_updated
                 ]
-                
                 for col_num, value in enumerate(row_data, 1):
                     ws.cell(row=row_num, column=col_num, value=value)
-            
             # Auto-adjust column widths
             for col in ws.columns:
                 max_length = 0
                 column = col[0].column_letter
                 for cell in col:
                     try:
-                        if len(str(cell.value)) > max_length:
+                        if cell.value and len(str(cell.value)) > max_length:
                             max_length = len(str(cell.value))
                     except:
                         pass
                 adjusted_width = (max_length + 2)
                 ws.column_dimensions[column].width = adjusted_width
-            
             # Save to memory
             output = io.BytesIO()
             wb.save(output)
             output.seek(0)
-            
             # Create response
             response = make_response(output.read())
             response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             response.headers['Content-Disposition'] = f'attachment; filename=hindalco_survey_data_{datetime.now().strftime("%Y%m%d")}.xlsx'
-            
             return response
-            
         except Exception as e:
             logger.error(f"Excel export error: {e}")
             flash('Error generating Excel export.', 'error')
             return redirect(url_for('admin_dashboard'))
+    
+    @app.route('/download-user-report/<int:user_id>')
+    @login_required
+    def download_user_report(user_id):
+        """
+        Download a PDF report for a specific user.
+        - Only the user themselves or an admin can download.
+        - This route always returns a PDF, never Excel.
+        """
+        # Only allow user to download their own report, or admin to download any
+        if session.get('user_id') != user_id and not session.get('admin_logged_in'):
+            flash('You are not authorized to download this report.', 'error')
+            return redirect(url_for('user_dashboard'))
+        user = HindalcoPledge.query.get_or_404(user_id)
+        surveys = SurveyResponse.query.filter_by(user_id=user.id).order_by(SurveyResponse.created_at.desc()).all()
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
+        elements = []
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle('title', parent=styles['Title'], fontSize=28, alignment=1, textColor=colors.HexColor('#2346b0'), spaceAfter=20)
+        section_header_style = ParagraphStyle('section_header', parent=styles['Heading2'], fontSize=20, alignment=1, textColor=colors.white, backColor=colors.HexColor('#2346b0'), spaceAfter=10, spaceBefore=20)
+        table_header_style = ParagraphStyle('table_header', parent=styles['Heading4'], fontSize=14, alignment=1, textColor=colors.white)
+        # Title
+        elements.append(Paragraph('DIGITAL CULTURE TRANSFORMATION REPORT', title_style))
+        elements.append(Spacer(1, 12))
+        # Personal Info Section
+        elements.append(Paragraph('PERSONAL INFORMATION', section_header_style))
+        personal_data = [
+            ['Field', 'Details'],
+            ['Full Name', user.name or 'Not specified'],
+            ['Email Address', user.email or 'Not specified'],
+            ['Employee ID', user.employee_id or 'Not specified'],
+            ['Phone Number', user.phone or 'Not specified'],
+            ['Designation/Role', user.designation or 'Not specified'],
+            ['Signature Date', 'Not specified'],
+        ]
+        personal_table = Table(personal_data, colWidths=[180, 300])
+        personal_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#2346b0')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('ALIGN', (0,0), (-1,0), 'CENTER'),
+            ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#f6fafd')),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#dbe5f1')),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+        ]))
+        elements.append(personal_table)
+        elements.append(Spacer(1, 18))
+        # Digital North Star Section
+        elements.append(Paragraph('DIGITAL NORTH STAR', section_header_style))
+        north_star_data = [
+            ['Component', 'Description'],
+            ['Problem Statement', user.problem_statement or 'Not specified'],
+            ['Success Metric', user.success_metric or 'Not specified'],
+            ['Timeline', user.timeline or 'Not specified'],
+        ]
+        north_star_table = Table(north_star_data, colWidths=[180, 300])
+        north_star_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#009e73')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('ALIGN', (0,0), (-1,0), 'CENTER'),
+            ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#eafaf3')),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+        ]))
+        elements.append(north_star_table)
+        elements.append(Spacer(1, 18))
+        # Behavior Change Commitments Section
+        elements.append(Paragraph('BEHAVIOR CHANGE COMMITMENTS', section_header_style))
+        # START Behaviors
+        elements.append(Paragraph('START Behaviors', ParagraphStyle('subheader', parent=styles['Heading3'], fontSize=16, textColor=colors.HexColor('#2346b0'), spaceAfter=8)))
+        start_data = [
+            ['Behavior Type', 'Description'],
+            ['START Behavior 1', user.behavior_start_1 or ''],
+            ['START Behavior 2', user.behavior_start_2 or ''],
+        ]
+        start_table = Table(start_data, colWidths=[180, 300])
+        start_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#009e73')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('ALIGN', (0,0), (-1,0), 'CENTER'),
+            ('BACKGROUND', (0,1), (-1,-1), colors.white),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+        ]))
+        elements.append(start_table)
+        elements.append(Spacer(1, 12))
+        # REDUCE Behaviors
+        elements.append(Paragraph('REDUCE Behaviors', ParagraphStyle('subheader', parent=styles['Heading3'], fontSize=16, textColor=colors.HexColor('#2346b0'), spaceAfter=8)))
+        reduce_data = [
+            ['Behavior Type', 'Description'],
+            ['REDUCE Behavior 1', user.behavior_reduce_1 or ''],
+            ['REDUCE Behavior 2', user.behavior_reduce_2 or ''],
+        ]
+        reduce_table = Table(reduce_data, colWidths=[180, 300])
+        reduce_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#f7a600')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('ALIGN', (0,0), (-1,0), 'CENTER'),
+            ('BACKGROUND', (0,1), (-1,-1), colors.white),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#ffe5b4')),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+        ]))
+        elements.append(reduce_table)
+        elements.append(Spacer(1, 12))
+        # STOP Behaviors
+        elements.append(Paragraph('STOP Behaviors', ParagraphStyle('subheader', parent=styles['Heading3'], fontSize=16, textColor=colors.HexColor('#2346b0'), spaceAfter=8)))
+        stop_data = [
+            ['Behavior Type', 'Description'],
+            ['STOP Behavior 1', user.behavior_stop_1 or ''],
+            ['STOP Behavior 2', user.behavior_stop_2 or ''],
+        ]
+        stop_table = Table(stop_data, colWidths=[180, 300])
+        stop_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#d7263d')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('ALIGN', (0,0), (-1,0), 'CENTER'),
+            ('BACKGROUND', (0,1), (-1,-1), colors.white),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#f7b6b6')),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+        ]))
+        elements.append(stop_table)
+        elements.append(Spacer(1, 18))
+        # Practice Commitments Section
+        elements.append(Paragraph('PRACTICE COMMITMENTS', section_header_style))
+        practice_data = [
+            ['Practice Type', 'Description'],
+            ['Weekly Practice', user.weekly_practice_1 or ''],
+            ['Monthly Practice 1', user.monthly_practice_1 or ''],
+            ['Monthly Practice 2', user.monthly_practice_2 or ''],
+            ['Quarterly Practice 1', user.quarterly_practice_1 or ''],
+            ['Quarterly Practice 2', user.quarterly_practice_2 or ''],
+            ['Custom Practice', user.custom_practice or ''],
+            ['Custom Frequency', user.custom_frequency or ''],
+        ]
+        practice_table = Table(practice_data, colWidths=[180, 300])
+        practice_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#2346b0')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('ALIGN', (0,0), (-1,0), 'CENTER'),
+            ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#f6fafd')),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#dbe5f1')),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+        ]))
+        elements.append(practice_table)
+        elements.append(Spacer(1, 18))
+        # Survey Responses Section (if any)
+        if surveys:
+            elements.append(Paragraph('SURVEY RESPONSES', section_header_style))
+            for idx, survey in enumerate(surveys, 1):
+                try:
+                    data = json.loads(survey.response_data) if survey.response_data else {}
+                except Exception:
+                    data = {}
+                elements.append(Paragraph(f'Survey #{idx}', styles['Heading4']))
+                survey_table_data = [['Field', 'Value']]
+                for k, v in data.items():
+                    survey_table_data.append([str(k), str(v)])
+                if survey.expert_comments:
+                    survey_table_data.append(['Expert Comments', survey.expert_comments])
+                survey_table = Table(survey_table_data, colWidths=[180, 300])
+                survey_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#009e73')),
+                    ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+                    ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                    ('ALIGN', (0,0), (-1,0), 'CENTER'),
+                    ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#eafaf3')),
+                    ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#b6e2d3')),
+                    ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+                    ('FONTSIZE', (0,0), (-1,-1), 12),
+                ]))
+                elements.append(survey_table)
+                elements.append(Spacer(1, 12))
+        doc.build(elements)
+        buffer.seek(0)
+        filename = f"Digital_Culture_Transformation_Report_{user.name.replace(' ', '_')}.pdf"
+        return send_file(buffer, as_attachment=True, download_name=filename, mimetype='application/pdf')
+    
+    @app.route('/download-report')
+    @login_required
+    def download_report():
+        return redirect(url_for('export_data'))
     
     @app.route('/logout')
     def logout():
@@ -798,7 +1037,83 @@ def initialize_database_with_participants(app):
                 return True
             
             # Use enhanced CSV loader
-            from enhanced_csv_loader import load_all_participants_from_csv
+            def clean_text(s):
+                if pd.isna(s):
+                    return ""
+                return re.sub(r'\s+', ' ', s).strip()
+
+            def clean_phone(s):
+                if pd.isna(s):
+                    return ""
+                # Remove all non-digit characters
+                return re.sub(r'\D', '', s)
+
+            def load_all_participants_from_csv():
+                """Load ALL participants with complete data from the new CSV file using header names."""
+                try:
+                    csv_file = 'All_36_Users_Complete_Data_20250715_121445.csv'
+                    df = pd.read_csv(csv_file)
+                    print(f"CSV loaded: {len(df)} rows, {len(df.columns)} columns")
+                    participants = []
+                    for index, row in df.iterrows():
+                        try:
+                            sr_no = clean_text(row.get('Sr', index+1))
+                            name = clean_text(row.get('Name'))
+                            email = clean_text(row.get('Email'))
+                            phone = clean_phone(row.get('Telephone'))
+                            employee_id = clean_text(row.get('Employee_ID', f"HIN{str(index+1).zfill(3)}"))
+                            designation = clean_text(row.get('Designation', 'Digital Transformation Specialist'))
+                            problem_statement = clean_text(row.get('Problem_Statement'))
+                            success_metric = clean_text(row.get('Key_Success_Metric'))
+                            timeline = clean_text(row.get('Timeline_to_Impact'))
+                            weekly_practice_1 = clean_text(row.get('Weekly_Practice_1'))
+                            monthly_practice_1 = clean_text(row.get('Monthly_Practice_1'))
+                            monthly_practice_2 = clean_text(row.get('Monthly_Practice_2'))
+                            quarterly_practice_1 = clean_text(row.get('Quarterly_Practice_1'))
+                            quarterly_practice_2 = clean_text(row.get('Quarterly_Practice_2'))
+                            custom_practice = clean_text(row.get('Custom_Practice'))
+                            custom_frequency = clean_text(row.get('Custom_Frequency'))
+                            behavior_start_1 = clean_text(row.get('Behavior_START_1'))
+                            behavior_start_2 = clean_text(row.get('Behavior_START_2'))
+                            behavior_reduce_1 = clean_text(row.get('Behavior_REDUCE_1'))
+                            behavior_reduce_2 = clean_text(row.get('Behavior_REDUCE_2'))
+                            behavior_stop_1 = clean_text(row.get('Behavior_STOP_1'))
+                            behavior_stop_2 = clean_text(row.get('Behavior_STOP_2'))
+                            participant_data = {
+                                'sr_no': sr_no,
+                                'name': name,
+                                'email': email,
+                                'phone': phone,
+                                'employee_id': employee_id,
+                                'designation': designation,
+                                'problem_statement': problem_statement,
+                                'success_metric': success_metric,
+                                'timeline': timeline,
+                                'weekly_practice_1': weekly_practice_1,
+                                'monthly_practice_1': monthly_practice_1,
+                                'monthly_practice_2': monthly_practice_2,
+                                'quarterly_practice_1': quarterly_practice_1,
+                                'quarterly_practice_2': quarterly_practice_2,
+                                'custom_practice': custom_practice,
+                                'custom_frequency': custom_frequency,
+                                'behavior_start_1': behavior_start_1,
+                                'behavior_start_2': behavior_start_2,
+                                'behavior_reduce_1': behavior_reduce_1,
+                                'behavior_reduce_2': behavior_reduce_2,
+                                'behavior_stop_1': behavior_stop_1,
+                                'behavior_stop_2': behavior_stop_2
+                            }
+                            if name and email:
+                                participants.append(participant_data)
+                                print(f"Loaded: {name} - {email}")
+                        except Exception as e:
+                            print(f"Error processing row {index}: {e}")
+                            continue
+                    print(f"\nTotal participants loaded: {len(participants)}")
+                    return participants
+                except Exception as e:
+                    print(f"Error loading CSV: {e}")
+                    return []
             
             # Load participants data
             participants_data = load_all_participants_from_csv()
