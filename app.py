@@ -8,11 +8,12 @@ import os
 import json
 import logging
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response, send_file
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import func
 from werkzeug.middleware.proxy_fix import ProxyFix
+import requests
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -163,24 +164,36 @@ def create_app():
         if request.method == 'POST':
             name = request.form.get('name', '').strip()
             email = request.form.get('email', '').strip()
-            
             if not name or not email:
                 flash('Please enter both name and email.', 'error')
                 return render_template('login.html')
-            
-            user = HindalcoPledge.query.filter(
-                func.lower(HindalcoPledge.name) == func.lower(name),
-                func.lower(HindalcoPledge.email) == func.lower(email)
-            ).first()
-            
-            if user:
-                session['user_id'] = user.id
-                session['user_name'] = user.name
-                flash(f'Welcome back, {user.name}!', 'success')
-                return redirect(url_for('user_dashboard'))
-            else:
-                flash('Invalid credentials. Please check your name and email.', 'error')
-        
+            # External API login
+            api_url = 'https://leading.ceei.me/hooks/login'
+            api_key = 'ceei_cS9kfGuEAEOyHsJ41voebpdVJw9N9JrMsnB4lvW5'
+            payload = {
+                'key': api_key,
+                'username': email,
+                'password': name
+            }
+            try:
+                api_resp = requests.post(api_url, data=payload, timeout=10)
+                api_json = api_resp.json()
+                if api_resp.status_code == 200 and api_json.get('success', False):
+                    user = HindalcoPledge.query.filter(
+                        func.lower(HindalcoPledge.name) == func.lower(name),
+                        func.lower(HindalcoPledge.email) == func.lower(email)
+                    ).first()
+                    if user:
+                        session['user_id'] = user.id
+                        session['user_name'] = user.name
+                        flash(f'Welcome back, {user.name}!', 'success')
+                        return redirect(url_for('user_dashboard'))
+                    else:
+                        flash('User not found in database. Please contact admin.', 'error')
+                else:
+                    flash('External login failed. Please check your credentials.', 'error')
+            except Exception as e:
+                flash(f'Login error: {e}', 'error')
         return render_template('login.html')
     
     @app.route('/user-dashboard')
