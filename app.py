@@ -924,6 +924,76 @@ def create_app():
             return redirect(url_for('login'))
         return redirect(url_for('download_user_report', user_id=user_id))
 
+    @app.route('/admin/bulk-api-login-test', methods=['GET', 'POST'])
+    @admin_required
+    def bulk_api_login_test():
+        """
+        Admin-only route to test API login for all users in a CSV and download the results as CSV.
+        """
+        import pandas as pd
+        import requests
+        import time
+        import io
+        from flask import send_file
+
+        results = []
+        message = None
+        if request.method == 'POST':
+            # Load user data from CSV (update the filename if needed)
+            csv_file = request.form.get('csv_file', 'All_36_Users_With_Uniform_Password.csv')
+            try:
+                df = pd.read_csv(csv_file)
+            except Exception as e:
+                message = f"Failed to load CSV: {e}"
+                return render_template('admin_bulk_api_login_test.html', message=message)
+
+            # API base URL and fixed credentials
+            base_url = "https://leading.ceei.me/hooks/login"
+            api_key = "ceei_cS9kfGuEAEOyHsJ41voebpdVJw9N9JrMsnB4lvW5"
+            default_password = "123456"  # Fixed password for all users
+
+            for index, row in df.iterrows():
+                name = row['Name']
+                email = row['Email']
+                params = {
+                    "key": api_key,
+                    "username": email,
+                    "password": default_password,
+                    "name": name
+                }
+                try:
+                    response = requests.get(base_url, params=params, timeout=10)
+                    status = response.status_code
+                    body = response.text
+                    results.append({
+                        "Index": index + 1,
+                        "Name": name,
+                        "Email": email,
+                        "URL": response.url,
+                        "Status": status,
+                        "Response": body
+                    })
+                except Exception as e:
+                    results.append({
+                        "Index": index + 1,
+                        "Name": name,
+                        "Email": email,
+                        "URL": "",
+                        "Status": "FAILED",
+                        "Response": str(e)
+                    })
+                time.sleep(1)  # avoid flooding the server
+            # Save all results to CSV in memory
+            output = io.StringIO()
+            pd.DataFrame(results).to_csv(output, index=False)
+            output.seek(0)
+            return send_file(
+                io.BytesIO(output.getvalue().encode()),
+                mimetype='text/csv',
+                as_attachment=True,
+                download_name='login_results.csv'
+            )
+        return render_template('admin_bulk_api_login_test.html', message=message)
     
     def get_detailed_impact_analysis():
         """Generate detailed impact analysis data for charts"""

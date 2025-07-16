@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Bulk API Login Test</h2>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="csv_file" class="form-label">CSV Filename</label>
+            <input type="text" class="form-control" id="csv_file" name="csv_file" value="All_36_Users_With_Uniform_Password.csv">
+            <div class="form-text">Enter the CSV filename to use for bulk login test.</div>
+        </div>
+        <button type="submit" class="btn btn-primary">Run Bulk Login Test &amp; Download Results</button>
+    </form>
+    {% if message %}
+        <div class="alert alert-danger mt-3">{{ message }}</div>
+    {% endif %}
+    <div class="alert alert-info mt-3">
+        <strong>Note:</strong> This will attempt to log in all users in the specified CSV using the fixed password and download the results as a CSV file.
+    </div>
+</div>
+{% endblock %}
