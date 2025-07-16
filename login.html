@@ -33,19 +33,18 @@
                         <input type="email" class="form-control" id="email" name="email" required>
                         <div class="form-text">Enter your email address</div>
                     </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <div class="form-text">Enter your password (default: engineer)</div>
+                    </div>
                     <div class="d-grid mb-2">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-sign-in-alt me-2"></i>
-                            Login (Database)
+                            Login (API)
                         </button>
                     </div>
                 </form>
-                <div class="d-grid mb-2">
-                    <button id="apiLoginBtn" class="btn btn-outline-info" type="button">
-                        <i class="fas fa-cloud me-2"></i>
-                        Login via API (Fixed Password)
-                    </button>
-                </div>
                 <div id="apiLoginResult" class="alert mt-2 d-none"></div>
             </div>
             <div class="card-footer text-center">
@@ -56,46 +55,4 @@
         </div>
     </div>
 </div>
-<script>
-    document.getElementById('apiLoginBtn').addEventListener('click', async function() {
-        const email = document.getElementById('email').value;
-        const name = document.getElementById('name').value;
-        const resultDiv = document.getElementById('apiLoginResult');
-        resultDiv.classList.add('d-none');
-        resultDiv.classList.remove('alert-success', 'alert-danger');
-        if (!email || !name) {
-            resultDiv.textContent = 'Please enter both name and email.';
-            resultDiv.classList.add('alert', 'alert-danger', 'd-block');
-            return;
-        }
-        resultDiv.textContent = 'Checking API login...';
-        resultDiv.classList.add('alert', 'alert-info', 'd-block');
-        try {
-            const params = new URLSearchParams({
-                key: 'ceei_cS9kfGuEAEOyHsJ41voebpdVJw9N9JrMsnB4lvW5',
-                username: email,
-                password: '123456',
-                name: name
-            });
-            const response = await fetch('https://leading.ceei.me/hooks/login?' + params, {
-                method: 'GET',
-                mode: 'cors'
-            });
-            const text = await response.text();
-            if (response.ok && text.includes('success')) {
-                resultDiv.textContent = 'API Login successful!';
-                resultDiv.classList.remove('alert-info', 'alert-danger');
-                resultDiv.classList.add('alert-success');
-            } else {
-                resultDiv.textContent = 'API Login failed: ' + text;
-                resultDiv.classList.remove('alert-info', 'alert-success');
-                resultDiv.classList.add('alert-danger');
-            }
-        } catch (e) {
-            resultDiv.textContent = 'API Login error: ' + e;
-            resultDiv.classList.remove('alert-info', 'alert-success');
-            resultDiv.classList.add('alert-danger');
-        }
-    });
-</script>
 {% endblock %}
