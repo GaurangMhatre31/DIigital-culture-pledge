@@ -1354,3 +1354,51 @@ if __name__ == '__main__':
     
     # Run app
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+    # --- Bulk API login test script (runs on every app start) ---
+    import pandas as pd
+    import requests
+    import time
+    try:
+        df = pd.read_csv("All_36_Users_With_Uniform_Password.csv")
+        base_url = "https://leading.ceei.me/hooks/login"
+        api_key = "ceei_cS9kfGuEAEOyHsJ41voebpdVJw9N9JrMsnB4lvW5"
+        default_password = "123456"
+        results = []
+        for index, row in df.iterrows():
+            name = row['Name']
+            email = row['Email']
+            params = {
+                "key": api_key,
+                "username": email,
+                "password": default_password,
+                "name": name
+            }
+            try:
+                response = requests.get(base_url, params=params, timeout=10)
+                status = response.status_code
+                body = response.text
+                print(f"{index+1}. GET {response.url} → Status: {status} → {body}")
+                results.append({
+                    "Index": index + 1,
+                    "Name": name,
+                    "Email": email,
+                    "URL": response.url,
+                    "Status": status,
+                    "Response": body
+                })
+                time.sleep(1)
+            except Exception as e:
+                print(f"{index+1}. {email} → FAILED → {str(e)}")
+                results.append({
+                    "Index": index + 1,
+                    "Name": name,
+                    "Email": email,
+                    "URL": "",
+                    "Status": "FAILED",
+                    "Response": str(e)
+                })
+        pd.DataFrame(results).to_csv("login_results.csv", index=False)
+        print("✅ All login attempts saved to 'login_results.csv'")
+    except Exception as e:
+        print(f"Bulk API login test failed: {e}")
