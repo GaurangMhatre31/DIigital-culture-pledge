@@ -197,6 +197,7 @@ def create_app():
             }
             try:
                 r = requests.get(api_url, params=params, timeout=10)
+                api_response_text = r.text
                 if r.status_code == 200 and r.json().get('success'):
                     # Optionally create user in local DB if not present
                     user = HindalcoPledge.query.filter(func.lower(HindalcoPledge.email) == func.lower(email)).first()
@@ -209,9 +210,9 @@ def create_app():
                     flash(f'Welcome (API), {user.name}!', 'success')
                     return redirect(url_for('user_dashboard'))
                 else:
-                    flash('Invalid credentials. Please check your name, email, and password.', 'error')
+                    flash(f'Invalid credentials. API response: {api_response_text}', 'error')
             except Exception as e:
-                flash('Login service unavailable. Please try again later.', 'error')
+                flash(f'Login service unavailable. Error: {e}', 'error')
         return render_template('login.html')
     
     @app.route('/user-dashboard')
