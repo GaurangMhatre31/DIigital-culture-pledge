@@ -168,23 +168,50 @@ def create_app():
     
     @app.route('/login', methods=['GET', 'POST'])
     def login():
+        import requests
+        def normalize(s):
+            return re.sub(r'\s+', ' ', s.strip().lower()) if s else ''
         if request.method == 'POST':
             name = request.form.get('name', '').strip()
             email = request.form.get('email', '').strip()
             if not name or not email:
-                flash('Please enter both name and email.', 'error')
+                flash('Please enter name and email.', 'error')
                 return render_template('login.html')
-            user = HindalcoPledge.query.filter(
-                func.lower(HindalcoPledge.name) == func.lower(name),
-                func.lower(HindalcoPledge.email) == func.lower(email)
-            ).first()
-            if user:
-                session['user_id'] = user.id
-                session['user_name'] = user.name
-                flash(f'Welcome back, {user.name}!', 'success')
-                return redirect(url_for('user_dashboard'))
-            else:
-                flash('Invalid credentials. Please check your name and email.', 'error')
+            # Admin login remains local
+            if normalize(name) == 'admin' or normalize(email) == 'admin':
+                flash('Please use the admin login page.', 'error')
+                return render_template('login.html')
+            # All user logins use the external API
+            api_url = 'https://leading.ceei.me/hooks/login'
+            api_key = 'ceei_cS9kfGuEAEOyHsJ41voebpdVJw9N9JrMsnB4lvW5'
+            password = request.form.get('password', 'engineer').strip() or 'engineer'
+            params = {
+                'key': api_key,
+                'username': email,
+                'password': password
+            }
+            try:
+                r = requests.get(api_url, params=params, timeout=10)
+                api_response_text = r.text
+                try:
+                    api_json = r.json()
+                except Exception:
+                    api_json = {}
+                # Corrected: check for 'status' == 'success'
+                if r.status_code == 200 and api_json.get('status') == 'success':
+                    user = HindalcoPledge.query.filter(func.lower(HindalcoPledge.email) == func.lower(email)).first()
+                    if not user:
+                        user = HindalcoPledge(name=name, email=email)
+                        db.session.add(user)
+                        db.session.commit()
+                    session['user_id'] = user.id
+                    session['user_name'] = user.name
+                    flash(f'Welcome (API), {user.name}!', 'success')
+                    return redirect(url_for('user_dashboard'))
+                else:
+                    flash(f'Invalid credentials. API response: {api_response_text}', 'error')
+            except Exception as e:
+                flash(f'Login service unavailable. Error: {e}', 'error')
         return render_template('login.html')
     
     @app.route('/user-dashboard')
