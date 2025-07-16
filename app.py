@@ -21,6 +21,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from flask_cors import CORS
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -95,6 +96,9 @@ def create_app():
     # Configuration
     app.secret_key = os.environ.get("SESSION_SECRET", "your-secret-key-here")
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+    
+    # Enable CORS for all routes
+    CORS(app)
     
     # Database configuration
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///hindalco.db")
@@ -1153,6 +1157,7 @@ def initialize_database_with_participants(app):
                     df = pd.read_csv(csv_file)
                     print(f"CSV loaded: {len(df)} rows, {len(df.columns)} columns")
                     participants = []
+                    skipped = []
                     for index, row in df.iterrows():
                         try:
                             sr_no = clean_text(row.get('Sr', index+1))
@@ -1204,10 +1209,15 @@ def initialize_database_with_participants(app):
                             if name and email:
                                 participants.append(participant_data)
                                 print(f"Loaded: {name} - {email}")
+                            else:
+                                skipped.append({'row': index+1, 'reason': f"Missing name or email: name='{name}', email='{email}'"})
                         except Exception as e:
-                            print(f"Error processing row {index}: {e}")
+                            skipped.append({'row': index+1, 'reason': str(e)})
                             continue
                     print(f"\nTotal participants loaded: {len(participants)}")
+                    print(f"Total rows skipped: {len(skipped)}")
+                    for skip in skipped:
+                        print(f"Skipped row {skip['row']}: {skip['reason']}")
                     return participants
                 except Exception as e:
                     print(f"Error loading CSV: {e}")

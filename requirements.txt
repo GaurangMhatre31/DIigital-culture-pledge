@@ -4,6 +4,7 @@ flask>=2.3.0
 flask-sqlalchemy>=3.0.0
 flask-mail>=0.9.1
 werkzeug>=2.3.0
+flask-cors
 
 # Database support
 psycopg2-binary>=2.9.0
