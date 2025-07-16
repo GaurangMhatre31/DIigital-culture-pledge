@@ -178,21 +178,40 @@ def create_app():
         if request.method == 'POST':
             name = request.form.get('name', '').strip()
             email = request.form.get('email', '').strip()
-            # password = request.form.get('password', '').strip()  # No longer needed
             if not name or not email:
                 flash('Please enter name and email.', 'error')
                 return render_template('login.html')
-            # Fetch all users and compare normalized fields
-            users = HindalcoPledge.query.all()
-            user = next((u for u in users if normalize(u.name) == normalize(name) and normalize(u.email) == normalize(email)), None)
-            if user:
-                session['user_id'] = user.id
-                session['user_name'] = user.name
-                flash(f'Welcome back, {user.name}!', 'success')
-                return redirect(url_for('user_dashboard'))
-            else:
-                # Optionally, you can keep API fallback if you want, but skip if password is not provided
-                flash('Invalid credentials. Please check your name and email.', 'error')
+            # Admin login remains local
+            if normalize(name) == 'admin' or normalize(email) == 'admin':
+                flash('Please use the admin login page.', 'error')
+                return render_template('login.html')
+            # All user logins use the external API
+            api_url = 'https://leading.ceei.me/hooks/login'
+            api_key = 'ceei_cS9kfGuEAEOyHsJ41voebpdVJw9N9JrMsnB4lvW5'
+            # Use a fixed password or allow user to enter password if you want
+            password = request.form.get('password', 'engineer').strip() or 'engineer'
+            params = {
+                'key': api_key,
+                'username': email,
+                'password': password
+            }
+            try:
+                r = requests.get(api_url, params=params, timeout=10)
+                if r.status_code == 200 and r.json().get('success'):
+                    # Optionally create user in local DB if not present
+                    user = HindalcoPledge.query.filter(func.lower(HindalcoPledge.email) == func.lower(email)).first()
+                    if not user:
+                        user = HindalcoPledge(name=name, email=email)
+                        db.session.add(user)
+                        db.session.commit()
+                    session['user_id'] = user.id
+                    session['user_name'] = user.name
+                    flash(f'Welcome (API), {user.name}!', 'success')
+                    return redirect(url_for('user_dashboard'))
+                else:
+                    flash('Invalid credentials. Please check your name, email, and password.', 'error')
+            except Exception as e:
+                flash('Login service unavailable. Please try again later.', 'error')
         return render_template('login.html')
     
     @app.route('/user-dashboard')
